@@ -87,3 +87,32 @@ async def opensearch(query: str, limit: int = 5) -> list[str]:
     titles = data[1]
 
     return titles
+
+
+async def search_by_text(query: str, limit: int = 5) -> list[str]:
+    '''
+    Searches for articles by text on the Ru Wikipedia.
+    
+    Args:
+        query: The text to search for.
+
+    Returns:
+        A list of article titles that match the search text.
+    '''
+    params = {
+        "action": "query",
+        "format": "json",
+        "list": "search",
+        "srsearch": query,
+        "srlimit": limit,
+        "srnamespace": 0,
+    }
+
+    data = await get(RUWIKI_API, params=params)
+    if not isinstance(data, dict):
+        return []
+    
+    results = data.get("query", {}).get("search", [])
+    titles = [result.get("title", "") for result in results if "title" in result]
+
+    return list(filter(lambda title: title.strip() != "", titles))
