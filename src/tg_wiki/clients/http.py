@@ -13,7 +13,7 @@ async def get(
     url: str,
     *,
     params: Optional[dict[str, Any]] = None,
-) -> dict:
+) -> dict | list | None:
     async with aiohttp.ClientSession(
         timeout=DEFAULT_TIMEOUT,
         headers=HEADERS,
