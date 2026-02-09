@@ -3,5 +3,6 @@ name = "tg_wiki"
 version = "0.1.0"
 dependencies = [
     "aiogram>=3.0",
-    "python-dotenv>=1.0"
+    "python-dotenv>=1.0",
+    "aiohttp>=3.0"
 ]
