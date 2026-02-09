@@ -1,0 +1,57 @@
+from typing import Optional
+
+from tg_wiki.clients.http import get
+
+
+RUWIKI_API = "https://ru.wikipedia.org/w/api.php"
+
+
+async def fetch_random_article_raw() -> Optional[dict]:
+    '''
+    Fetches a random article from the Ru Wikipedia.
+    
+    Returns:
+        A dictionary containing the article's information, or None if no article was found.
+    '''
+    params = {
+        "action": "query",
+        "format": "json",
+        "generator": "random",
+        "grnlimit": 1,
+        "grnnamespace": 0,
+        "prop": "extracts|info",
+        "exintro": 1,
+        "explaintext": 1,
+        "inprop": "url",
+    }
+    data = await get(RUWIKI_API, params=params)
+    pages = data.get("query", {}).get("pages", {})
+    if not pages:
+        return None
+    return next(iter(pages.values()))
+
+
+async def fetch_article_by_title_raw(title: str) -> Optional[dict]:
+    '''
+    Fetches an article by its title from the Ru Wikipedia.
+    
+    Args:
+        title: The title of the article to fetch.
+
+    Returns:
+        A dictionary containing the article's information, or None if no article was found.
+    '''
+    params = {
+        "action": "query",
+        "format": "json",
+        "titles": title,
+        "prop": "extracts|info",
+        "exintro": 1,
+        "explaintext": 1,
+        "inprop": "url",
+    }
+    data = await get(RUWIKI_API, params=params)
+    pages = data.get("query", {}).get("pages", {})
+    if not pages:
+        return None
+    return next(iter(pages.values()))
