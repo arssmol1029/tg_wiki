@@ -52,7 +52,7 @@ async def get_article_by_title(title: str) -> Optional[dict]:
         return article
     
 
-async def search_articles(query: str, limit: int = 5) -> list[dict[str, str]]:
+async def search_articles(query: str, limit: int = 5) -> list[str]:
     '''
     Searches for articles by query on the Ru Wikipedia.
     
@@ -63,4 +63,4 @@ async def search_articles(query: str, limit: int = 5) -> list[dict[str, str]]:
         A list of dictionaries containing the title and URL of the found articles.
     '''
     results = await wiki.opensearch(query, limit=limit)
-    return [{"title": title, "url": url} for title, url in results]
+    return results

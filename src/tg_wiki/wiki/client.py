@@ -30,6 +30,7 @@ async def fetch_random() -> Optional[dict]:
     pages = data.get("query", {}).get("pages", {})
     if not pages:
         return None
+    
     return next(iter(pages.values()))
 
 
@@ -58,10 +59,11 @@ async def fetch_by_title(title: str) -> Optional[dict]:
     pages = data.get("query", {}).get("pages", {})
     if not pages:
         return None
+    
     return next(iter(pages.values()))
 
 
-async def opensearch(query: str, limit: int = 5) -> list[dict[str, str]]:
+async def opensearch(query: str, limit: int = 5) -> list[str]:
     '''
     Searches for articles by query on the Ru Wikipedia.
     
@@ -82,8 +84,6 @@ async def opensearch(query: str, limit: int = 5) -> list[dict[str, str]]:
     data = await get(RUWIKI_API, params=params)
     if not data:
         return []
-
     titles = data[1]
-    urls = data[3]
 
-    return [{"title": title, "url": url} for title, url in zip(titles, urls)]
+    return titles
