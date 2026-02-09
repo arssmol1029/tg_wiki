@@ -12,9 +12,7 @@ router = Router()
 async def next_handler(message: Message) -> None:
     article = await get_next_article()
     if not article:
-        await message.answer(
-            "Ошибка"
-        )
+        await message.answer("Ошибка")
         return
     await message.answer(
         f"{article['title']}\n\n{article['extract']}"
