@@ -63,7 +63,36 @@ async def fetch_by_title(title: str) -> Optional[dict]:
     return next(iter(pages.values()))
 
 
-async def opensearch(query: str, limit: int = 5) -> list[str]:
+async def fetch_by_pageid(pageid: str) -> Optional[dict]:
+    '''
+    Fetches an article by its pageid from the Ru Wikipedia.
+    
+    Args:
+        pageid: The pageid of the article to fetch.
+
+    Returns:
+        A dictionary containing the article's information, or None if no article was found.
+    '''
+    params = {
+        "action": "query",
+        "format": "json",
+        "pageids": pageid,
+        "prop": "extracts|info",
+        "exintro": 1,
+        "explaintext": 1,
+        "inprop": "url",
+    }
+    data = await get(RUWIKI_API, params=params)
+    if not isinstance(data, dict):
+        return None
+    pages = data.get("query", {}).get("pages", {})
+    if not pages:
+        return None
+    
+    return next(iter(pages.values()))
+
+
+async def opensearch_titles(query: str, limit: int = 5) -> list[str]:
     '''
     Searches for articles by matching in the title of article on the Ru Wikipedia.
     
@@ -90,7 +119,43 @@ async def opensearch(query: str, limit: int = 5) -> list[str]:
     return titles
 
 
-async def search_by_text(query: str, limit: int = 5) -> list[str]:
+async def opensearch(query: str, limit: int = 5) -> list[dict[str, str]]:
+    '''
+    Searches for articles by matching in the title of article on the Ru Wikipedia, returning titles and pageids.
+    
+    Args:
+        query: The query to search for.
+        limit: The maximum number of search results to return.
+
+    Returns:
+        A list of dictionaries containing the title and pageid of the found articles.
+    '''
+    params = {
+        "action": "opensearch",
+        "search": query,
+        "limit": limit,
+        "namespace": 0,
+        "format": "json",
+    }
+
+    data = await get(RUWIKI_API, params=params)
+    if not data:
+        return []
+    
+    titles = data[1]
+    pageids = []
+
+    for title in titles:
+        result = await fetch_by_title(title)
+        if result:
+            pageids.append(result.get("pageid", ""))
+        else:
+            pageids.append("")
+
+    return [{"title": title, "pageid": pageid} for title, pageid in zip(titles, pageids)]
+
+
+async def search_by_text(query: str, limit: int = 5) -> list[dict[str, str]]:
     '''
     Searches for articles by matching in the text of article on the Ru Wikipedia.
     
@@ -115,6 +180,5 @@ async def search_by_text(query: str, limit: int = 5) -> list[str]:
         return []
     
     results = data.get("query", {}).get("search", [])
-    titles = [result.get("title", "") for result in results if "title" in result]
 
-    return list(filter(lambda title: title.strip() != "", titles))
+    return [{"title": result.get("title", ""), "pageid": result.get("pageid", "")} for result in results]
