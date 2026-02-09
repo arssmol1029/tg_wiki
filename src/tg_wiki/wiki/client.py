@@ -55,3 +55,31 @@ async def fetch_article_by_title_raw(title: str) -> Optional[dict]:
     if not pages:
         return None
     return next(iter(pages.values()))
+
+
+async def opensearch(query: str, limit: int = 5) -> list[dict[str, str]]:
+    '''
+    Searches for articles by query on the Ru Wikipedia.
+    
+    Args:
+        query: The query to search for.
+
+    Returns:
+        A list of article titles that match the search query.
+    '''
+    params = {
+        "action": "opensearch",
+        "search": query,
+        "limit": limit,
+        "namespace": 0,
+        "format": "json",
+    }
+
+    data = await get(RUWIKI_API, params=params)
+    if not data:
+        return []
+
+    titles = data[1]
+    urls = data[3]
+
+    return [{"title": title, "url": url} for title, url in zip(titles, urls)]
