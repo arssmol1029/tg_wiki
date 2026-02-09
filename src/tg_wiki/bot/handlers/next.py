@@ -13,7 +13,7 @@ async def next_handler(message: Message) -> None:
     article = await get_next_article()
     if not article:
         await message.answer(
-            "No valid article found. Please try again."
+            "Ошибка"
         )
         return
     await message.answer(
