@@ -2,6 +2,7 @@ from typing import Optional
 
 from tg_wiki.wiki.client import fetch_random_article_raw
 from tg_wiki.wiki.client import fetch_article_by_title_raw
+from tg_wiki.wiki.client import opensearch
 
 
 
@@ -52,3 +53,17 @@ async def get_article_by_title(title: str) -> Optional[dict]:
     article = await fetch_article_by_title_raw(title)
     if article and await is_valid_article(article):
         return article
+    
+
+async def search_articles(query: str, limit: int = 5) -> list[dict[str, str]]:
+    '''
+    Searches for articles by query on the Ru Wikipedia.
+    
+    Args:
+        query: The query to search for.
+
+    Returns:
+        A list of dictionaries containing the title and URL of the found articles.
+    '''
+    results = await opensearch(query, limit=limit)
+    return [{"title": title, "url": url} for title, url in results]
