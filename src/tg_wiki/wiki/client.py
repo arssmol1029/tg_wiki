@@ -87,7 +87,7 @@ async def opensearch(query: str, limit: int = 5) -> list[str]:
         return []
     titles = data[1]
 
-    return list(filter(lambda title: title.strip() != "", titles))
+    return titles
 
 
 async def search_by_text(query: str, limit: int = 5) -> list[str]:
