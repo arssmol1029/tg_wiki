@@ -6,7 +6,7 @@ from tg_wiki.clients.http import get
 RUWIKI_API = "https://ru.wikipedia.org/w/api.php"
 
 
-async def fetch_random_article_raw() -> Optional[dict]:
+async def fetch_random() -> Optional[dict]:
     '''
     Fetches a random article from the Ru Wikipedia.
     
@@ -33,7 +33,7 @@ async def fetch_random_article_raw() -> Optional[dict]:
     return next(iter(pages.values()))
 
 
-async def fetch_article_by_title_raw(title: str) -> Optional[dict]:
+async def fetch_by_title(title: str) -> Optional[dict]:
     '''
     Fetches an article by its title from the Ru Wikipedia.
     

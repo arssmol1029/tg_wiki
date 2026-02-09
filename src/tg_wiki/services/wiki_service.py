@@ -1,9 +1,6 @@
 from typing import Optional
 
-from tg_wiki.wiki.client import fetch_random_article_raw
-from tg_wiki.wiki.client import fetch_article_by_title_raw
-from tg_wiki.wiki.client import opensearch
-
+import tg_wiki.wiki.client as wiki
 
 
 async def is_valid_article(article: dict, min_length: int = 0) -> bool:
@@ -34,7 +31,7 @@ async def get_next_article(min_length: int = 100) -> Optional[dict]:
         A dictionary containing the article's information.
     '''
     while True:
-        article = await fetch_random_article_raw()
+        article = await wiki.fetch_random()
         if article:
             if await is_valid_article(article, min_length=min_length):
                 return article
@@ -50,7 +47,7 @@ async def get_article_by_title(title: str) -> Optional[dict]:
     Returns:
         A dictionary containing the article's information, or None if no valid article was found.
     '''
-    article = await fetch_article_by_title_raw(title)
+    article = await wiki.fetch_by_title(title)
     if article and await is_valid_article(article):
         return article
     
@@ -65,5 +62,5 @@ async def search_articles(query: str, limit: int = 5) -> list[dict[str, str]]:
     Returns:
         A list of dictionaries containing the title and URL of the found articles.
     '''
-    results = await opensearch(query, limit=limit)
+    results = await wiki.opensearch(query, limit=limit)
     return [{"title": title, "url": url} for title, url in results]
