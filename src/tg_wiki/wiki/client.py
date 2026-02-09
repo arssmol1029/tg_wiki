@@ -65,10 +65,11 @@ async def fetch_by_title(title: str) -> Optional[dict]:
 
 async def opensearch(query: str, limit: int = 5) -> list[str]:
     '''
-    Searches for articles by query on the Ru Wikipedia.
+    Searches for articles by matching in the title of article on the Ru Wikipedia.
     
     Args:
         query: The query to search for.
+        limit: The maximum number of search results to return.
 
     Returns:
         A list of article titles that match the search query.
@@ -91,13 +92,14 @@ async def opensearch(query: str, limit: int = 5) -> list[str]:
 
 async def search_by_text(query: str, limit: int = 5) -> list[str]:
     '''
-    Searches for articles by text on the Ru Wikipedia.
+    Searches for articles by matching in the text of article on the Ru Wikipedia.
     
     Args:
-        query: The text to search for.
+        query: The query to search for.
+        limit: The maximum number of search results to return.
 
     Returns:
-        A list of article titles that match the search text.
+        A list of article titles that match the search query.
     '''
     params = {
         "action": "query",
