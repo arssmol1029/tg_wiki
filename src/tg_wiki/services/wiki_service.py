@@ -62,5 +62,8 @@ async def search_articles(query: str, limit: int = 5) -> list[str]:
     Returns:
         A list of dictionaries containing the title and URL of the found articles.
     '''
-    results = await wiki.opensearch(query, limit=limit)
-    return results
+    results_title = await wiki.opensearch(query, limit=limit)
+    if len(results_title) < limit:
+        results_text = await wiki.search_by_text(query, limit=limit - len(results_title))
+        results_title.extend(results_text)
+    return results_title
