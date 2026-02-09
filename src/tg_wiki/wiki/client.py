@@ -25,6 +25,8 @@ async def fetch_random_article_raw() -> Optional[dict]:
         "inprop": "url",
     }
     data = await get(RUWIKI_API, params=params)
+    if not isinstance(data, dict):
+        return None
     pages = data.get("query", {}).get("pages", {})
     if not pages:
         return None
@@ -51,6 +53,8 @@ async def fetch_article_by_title_raw(title: str) -> Optional[dict]:
         "inprop": "url",
     }
     data = await get(RUWIKI_API, params=params)
+    if not isinstance(data, dict):
+        return None
     pages = data.get("query", {}).get("pages", {})
     if not pages:
         return None
