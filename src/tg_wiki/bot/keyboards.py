@@ -44,7 +44,7 @@ def search_results_keyboard(results: list[dict[str, str]]) -> InlineKeyboardMark
                     callback_data=f"select:{result['pageid']}"
                 )
             ]
-            for result in results
+            for result in results if result.get("title", None) and result.get("pageid", None)
         ]
     )
     return keyboard
