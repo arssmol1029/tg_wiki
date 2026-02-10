@@ -116,7 +116,7 @@ async def opensearch_titles(query: str, limit: int = 5) -> list[str]:
     }
 
     data = await get(RUWIKI_API, params=params)
-    if not data:
+    if not data or not isinstance(data, list) or len(data) < 2:
         return []
     titles = data[1]
 
@@ -134,19 +134,10 @@ async def opensearch(query: str, limit: int = 5) -> list[dict[str, str]]:
     Returns:
         A list of dictionaries containing the title and pageid of the found articles.
     '''
-    params = {
-        "action": "opensearch",
-        "search": query,
-        "limit": limit,
-        "namespace": 0,
-        "format": "json",
-    }
-
-    data = await get(RUWIKI_API, params=params)
-    if not data:
+    titles = await opensearch_titles(query, limit=limit)
+    if not titles:
         return []
     
-    titles = data[1]
     pageids = []
 
     for title in titles:
