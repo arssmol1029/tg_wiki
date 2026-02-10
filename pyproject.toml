@@ -1,8 +1,19 @@
 [project]
 name = "tg_wiki"
 version = "0.1.0"
+requires-python = ">=3.11"
 dependencies = [
-    "aiogram>=3.0",
-    "python-dotenv>=1.0",
-    "aiohttp>=3.0"
+  "aiogram>=3.0",
+  "python-dotenv>=1.0",
+  "aiohttp>=3.0",
 ]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+tg-wiki = "tg_wiki.main:run"
