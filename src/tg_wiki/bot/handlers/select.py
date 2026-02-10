@@ -7,7 +7,7 @@ from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
 
 router = Router()
 
-
+# Command format: select:{pageid} or select:{page_num}:{pageid}
 @router.callback_query(lambda c: c.data and c.data.startswith("select:"))
 async def select_callback_handler(callback: CallbackQuery):
     if not callback.data:
