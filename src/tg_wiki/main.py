@@ -5,14 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from dotenv import load_dotenv
 
-from src.tg_wiki.bot.handlers import next
-from tg_wiki.bot.handlers import start
-from tg_wiki.bot.handlers import search
-from tg_wiki.bot.handlers import select
-from tg_wiki.bot.handlers import noop
-from tg_wiki.bot.handlers import help
-from tg_wiki.bot.handlers import default
-from tg_wiki.bot.handlers import cancel
+from tg_wiki.bot.handlers import cancel, default, help, next, noop, search, select, start
 
 
 async def main() -> None:
@@ -29,7 +22,6 @@ async def main() -> None:
     dp.include_router(help.router)
     dp.include_router(search.router)
     dp.include_router(default.router)
-
     commands = [
         BotCommand(command="start", description="Запустить бота"),
         BotCommand(command="help", description="Показать доступные команды"),
