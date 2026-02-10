@@ -35,7 +35,7 @@ async def get_next_article(http: HttpClient, min_length: int = 100) -> Optional[
     Fetches a random article from the Ru Wikipedia and checks if it's valid.
     
     Returns:
-        A dictionary containing the article's information.
+        A dictionary containing the article's information or None if no valid article was found.
     '''
     data = await wiki.fetch_random(http)
     if not isinstance(data, dict):
