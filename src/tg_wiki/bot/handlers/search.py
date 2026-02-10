@@ -64,12 +64,14 @@ async def wiki_select(callback: CallbackQuery):
     if article.get("thumbnail", None) and article["thumbnail"].get("source", None):
         await callback.message.answer_photo(
             photo=article["thumbnail"]["source"],
-            caption=f"{article['title']}\n\n{article['extract']}"
+            caption=f'<b><a href="{article["fullurl"]}">{article["title"]}</a></b>\n\n{article["extract"]}',
+            parse_mode="HTML"
         )
         return
 
     await callback.message.answer(
-        f"{article['title']}\n\n{article['extract']}"
+        f'<b><a href="{article["fullurl"]}">{article["title"]}</a></b>\n\n{article["extract"]}',
+        parse_mode="HTML"
     )
 
     await callback.answer()

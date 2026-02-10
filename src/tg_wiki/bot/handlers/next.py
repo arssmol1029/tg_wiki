@@ -18,10 +18,12 @@ async def next_handler(message: Message) -> None:
     if article.get("thumbnail", None) and article["thumbnail"].get("source", None):
         await message.answer_photo(
             photo=article["thumbnail"]["source"],
-            caption=f"{article['title']}\n\n{article['extract']}"
+            caption=f'<b><a href="{article["fullurl"]}">{article["title"]}</a></b>\n\n{article["extract"]}',
+            parse_mode="HTML"
         )
         return
 
     await message.answer(
-        f"{article['title']}\n\n{article['extract']}"
+        f'<b><a href="{article["fullurl"]}">{article["title"]}</a></b>\n\n{article["extract"]}',
+        parse_mode="HTML"
     )
