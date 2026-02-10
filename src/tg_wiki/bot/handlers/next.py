@@ -42,7 +42,7 @@ async def next_handler(message: Message | MaybeInaccessibleMessageUnion) -> None
 
 
 @router.message(Command("next"))
-async def next_massage_handler(message: Message, state: FSMContext) -> None:
+async def next_message_handler(message: Message, state: FSMContext) -> None:
     await state.clear()
     await next_handler(message)
 
