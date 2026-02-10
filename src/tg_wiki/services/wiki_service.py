@@ -3,7 +3,7 @@ from typing import Optional
 import tg_wiki.wiki.client as wiki
 
 
-async def is_valid_article(article: dict, min_length: int = 0, max_length: int = 10000) -> bool:
+def is_valid_article(article: dict, min_length: int = 0, max_length: int = 10000) -> bool:
     '''
     Filters the raw article data
     
@@ -33,7 +33,7 @@ async def get_next_article(min_length: int = 100) -> Optional[dict]:
     while True:
         article = await wiki.fetch_random()
         if article:
-            if await is_valid_article(article, min_length=min_length):
+            if is_valid_article(article, min_length=min_length):
                 return article
 
 
@@ -48,7 +48,7 @@ async def get_article_by_title(title: str) -> Optional[dict]:
         A dictionary containing the article's information, or None if no valid article was found.
     '''
     article = await wiki.fetch_by_title(title)
-    if article and await is_valid_article(article):
+    if article and is_valid_article(article):
         return article
     
 
@@ -63,7 +63,7 @@ async def get_article_by_pageid(pageid: str) -> Optional[dict]:
         A dictionary containing the article's information, or None if no valid article was found.
     '''
     article = await wiki.fetch_by_pageid(pageid)
-    if article and await is_valid_article(article):
+    if article and is_valid_article(article):
         return article
     
 
