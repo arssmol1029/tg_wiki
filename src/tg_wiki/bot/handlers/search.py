@@ -12,7 +12,7 @@ router = Router()
 
 
 @router.message(Command("search"))
-async def search_handler(message: Message) -> None:
+async def search_message_handler(message: Message) -> None:
     if not message.text:
         await message.answer("Ошибка")
         return
@@ -30,7 +30,7 @@ async def search_handler(message: Message) -> None:
             [
                 InlineKeyboardButton(
                     text=result["title"],
-                    callback_data=f"wiki:{result['pageid']}"
+                    callback_data=f"select:{result['pageid']}"
                 )
             ]
             for result in results
@@ -43,13 +43,13 @@ async def search_handler(message: Message) -> None:
     )
 
 
-@router.callback_query(lambda c: c.data and c.data.startswith("wiki:"))
-async def wiki_select(callback: CallbackQuery):
+@router.callback_query(lambda c: c.data and c.data.startswith("select:"))
+async def select_callback_handler(callback: CallbackQuery):
     if not callback.data:
         await callback.answer()
         return
     
-    pageid = callback.data.removeprefix("wiki:")
+    pageid = callback.data.removeprefix("select:")
 
     article = await get_article_by_pageid(pageid)
     
@@ -61,17 +61,25 @@ async def wiki_select(callback: CallbackQuery):
         await callback.answer("Ошибка")
         return
     
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="next", callback_data="next")]
+        ]
+    )
+
     if article.get("thumbnail", None) and article["thumbnail"].get("source", None):
         await callback.message.answer_photo(
             photo=article["thumbnail"]["source"],
             caption=f'<b><a href="{article["fullurl"]}">{article["title"]}</a></b>\n\n{article["extract"]}',
-            parse_mode="HTML"
+            parse_mode="HTML",
+            reply_markup=keyboard
         )
         return
 
     await callback.message.answer(
         f'<b><a href="{article["fullurl"]}">{article["title"]}</a></b>\n\n{article["extract"]}',
-        parse_mode="HTML"
+        parse_mode="HTML",
+        reply_markup=keyboard
     )
 
     await callback.answer()
