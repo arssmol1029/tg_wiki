@@ -11,6 +11,7 @@ from tg_wiki.bot.handlers import search
 from tg_wiki.bot.handlers import select
 from tg_wiki.bot.handlers import noop
 from tg_wiki.bot.handlers import help
+from tg_wiki.bot.handlers import default
 
 
 async def main() -> None:
@@ -25,6 +26,7 @@ async def main() -> None:
     dp.include_router(select.router)
     dp.include_router(noop.router)
     dp.include_router(help.router)
+    dp.include_router(default.router)
 
     commands = [
         BotCommand(command="start", description="Запустить бота"),
