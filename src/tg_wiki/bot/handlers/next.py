@@ -1,6 +1,6 @@
 from aiogram import Router
 from aiogram.filters import Command
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 
 from tg_wiki.services.wiki_service import get_next_article
 
@@ -8,8 +8,7 @@ from tg_wiki.services.wiki_service import get_next_article
 router = Router()
 
 
-@router.message(Command("next"))
-async def next_massage_handler(message: Message) -> None:
+async def next_handler(message: Message) -> None:
     article = await get_next_article()
     if not article:
         await message.answer("Ошибка")
@@ -17,7 +16,7 @@ async def next_massage_handler(message: Message) -> None:
     
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="next", callback_data="next")]
+            [InlineKeyboardButton(text="Следующий пост", callback_data="next")]
         ]
     )
 
@@ -35,3 +34,17 @@ async def next_massage_handler(message: Message) -> None:
         parse_mode="HTML",
         reply_markup=keyboard
     )
+
+
+@router.message(Command("next"))
+async def next_massage_handler(message: Message) -> None:
+    await next_handler(message)
+
+
+@router.callback_query(lambda c: c.data and c.data == "next")
+async def next_callback_handler(callback: CallbackQuery):
+    if isinstance(callback.message, Message):
+        message = callback.message
+        await next_handler(message)
+
+    await callback.answer()
