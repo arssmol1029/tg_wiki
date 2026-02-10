@@ -1,15 +1,19 @@
 from typing import Optional
+from webbrowser import get
 
-from tg_wiki.clients.http import get
+from tg_wiki.clients.http import HttpClient, Json
 
 
 RUWIKI_API = "https://ru.wikipedia.org/w/api.php"
 IMAGE_WIDTH = 300
 
 
-async def fetch_random() -> Optional[dict]:
+async def fetch_random(http: HttpClient) -> Json:
     '''
     Fetches a random article from the Ru Wikipedia.
+
+    Args:
+        http: The HttpClient instance to use for making requests.
     
     Returns:
         A dictionary containing the article's information, or None if no article was found.
@@ -26,22 +30,23 @@ async def fetch_random() -> Optional[dict]:
         "inprop": "url",
         "pithumbsize": IMAGE_WIDTH,
     }
-    data = await get(RUWIKI_API, params=params)
-    if not isinstance(data, dict):
-        return None
-    pages = data.get("query", {}).get("pages", {})
-    if not pages:
-        return None
+    # data = await http.get_json(RUWIKI_API, params=params)
+    # if not isinstance(data, dict):
+    #     return None
+    # pages = data.get("query", {}).get("pages", {})
+    # if not pages:
+    #     return None
     
-    return next(iter(pages.values()))
+    return await http.get_json(RUWIKI_API, params=params)
 
 
-async def fetch_by_title(title: str) -> Optional[dict]:
+async def fetch_by_title(http: HttpClient, titles: list[str]) -> Json:
     '''
     Fetches an article by its title from the Ru Wikipedia.
     
     Args:
-        title: The title of the article to fetch.
+        http: The HttpClient instance to use for making requests.
+        titles: The list of titles of the articles to fetch.
 
     Returns:
         A dictionary containing the article's information, or None if no article was found.
@@ -49,28 +54,29 @@ async def fetch_by_title(title: str) -> Optional[dict]:
     params = {
         "action": "query",
         "format": "json",
-        "titles": title,
+        "titles": "|".join(titles),
         "prop": "extracts|info|pageimages",
         "exintro": 1,
         "explaintext": 1,
         "inprop": "url",
         "pithumbsize": IMAGE_WIDTH,
     }
-    data = await get(RUWIKI_API, params=params)
-    if not isinstance(data, dict):
-        return None
-    pages = data.get("query", {}).get("pages", {})
-    if not pages:
-        return None
+    # data = await http.get_json(RUWIKI_API, params=params)
+    # if not isinstance(data, dict):
+    #     return None
+    # pages = data.get("query", {}).get("pages", {})
+    # if not pages:
+    #     return None
     
-    return next(iter(pages.values()))
+    return await http.get_json(RUWIKI_API, params=params)
 
 
-async def fetch_by_pageid(pageid: str) -> Optional[dict]:
+async def fetch_by_pageid(http: HttpClient, pageid: str) -> Json:
     '''
     Fetches an article by its pageid from the Ru Wikipedia.
     
     Args:
+        http: The HttpClient instance to use for making requests.
         pageid: The pageid of the article to fetch.
 
     Returns:
@@ -86,21 +92,22 @@ async def fetch_by_pageid(pageid: str) -> Optional[dict]:
         "inprop": "url",
         "pithumbsize": IMAGE_WIDTH,
     }
-    data = await get(RUWIKI_API, params=params)
-    if not isinstance(data, dict):
-        return None
-    pages = data.get("query", {}).get("pages", {})
-    if not pages:
-        return None
+    # data = await http.get_json(RUWIKI_API, params=params)
+    # if not isinstance(data, dict):
+    #     return None
+    # pages = data.get("query", {}).get("pages", {})
+    # if not pages:
+    #     return None
     
-    return next(iter(pages.values()))
+    return await http.get_json(RUWIKI_API, params=params)
 
 
-async def opensearch_titles(query: str, limit: int = 5) -> list[str]:
+async def search_by_title(http: HttpClient, query: str, limit: int = 5) -> Json:
     '''
     Searches for articles by matching in the title of article on the Ru Wikipedia.
     
     Args:
+        http: The HttpClient instance to use for making requests.
         query: The query to search for.
         limit: The maximum number of search results to return.
 
@@ -115,55 +122,20 @@ async def opensearch_titles(query: str, limit: int = 5) -> list[str]:
         "format": "json",
     }
 
-    data = await get(RUWIKI_API, params=params)
-    if not data or not isinstance(data, list) or len(data) < 2:
-        return []
-    titles = data[1]
+    # data = await http.get_json(RUWIKI_API, params=params)
+    # if not data or not isinstance(data, list) or len(data) < 2:
+    #     return []
+    # titles = data[1]
 
-    return titles
-
-
-async def opensearch(query: str, limit: int = 5) -> list[dict[str, str]]:
-    '''
-    Searches for articles by matching in the title of article on the Ru Wikipedia, returning titles and pageids.
-    
-    Args:
-        query: The query to search for.
-        limit: The maximum number of search results to return.
-
-    Returns:
-        A list of dictionaries containing the title and pageid of the found articles.
-    '''
-    titles = await opensearch_titles(query, limit=limit)
-    if not titles:
-        return []
-    
-    params = {
-        "action": "query",
-        "format": "json",
-        "titles": "|".join(titles),
-        "prop": "extracts|info|pageimages",
-        "exintro": 1,
-        "explaintext": 1,
-        "inprop": "url",
-        "pithumbsize": IMAGE_WIDTH,
-    }
-
-    data = await get(RUWIKI_API, params=params)
-    if not isinstance(data, dict):
-        return []
-    pages = data.get("query", {}).get("pages", {})
-    if not pages:
-        return []
-
-    return [{"title": page.get("title", ""), "pageid": page.get("pageid", "")} for page in pages.values()]
+    return await http.get_json(RUWIKI_API, params=params)
 
 
-async def search_by_text(query: str, limit: int = 5) -> list[dict[str, str]]:
+async def search_by_text(http: HttpClient, query: str, limit: int = 5) -> Json:
     '''
     Searches for articles by matching in the text of article on the Ru Wikipedia.
     
     Args:
+        http: The HttpClient instance to use for making requests.
         query: The query to search for.
         limit: The maximum number of search results to return.
 
@@ -179,10 +151,10 @@ async def search_by_text(query: str, limit: int = 5) -> list[dict[str, str]]:
         "srnamespace": 0,
     }
 
-    data = await get(RUWIKI_API, params=params)
-    if not isinstance(data, dict):
-        return []
+    # data = await http.get_json(RUWIKI_API, params=params)
+    # if not isinstance(data, dict):
+    #     return []
     
-    results = data.get("query", {}).get("search", [])
+    # results = data.get("query", {}).get("search", [])
 
-    return [{"title": result.get("title", ""), "pageid": result.get("pageid", "")} for result in results]
+    return await http.get_json(RUWIKI_API, params=params)

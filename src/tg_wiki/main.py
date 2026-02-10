@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from dotenv import load_dotenv
 
+from tg_wiki.clients.http import HttpClient
 from tg_wiki.bot.handlers import cancel, default, help, next, noop, search, select, start
 
 
@@ -13,6 +14,9 @@ async def main() -> None:
 
     bot = Bot(token=os.environ["BOT_TOKEN"])
     dp = Dispatcher()
+    http = HttpClient()
+    await http.start()
+    dp.workflow_data["http"] = http
 
     dp.include_router(cancel.router)
     dp.include_router(start.router)
@@ -31,7 +35,11 @@ async def main() -> None:
     ]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
-    await dp.start_polling(bot)
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await http.close()
+        await bot.session.close()
 
 
 if __name__ == "__main__":

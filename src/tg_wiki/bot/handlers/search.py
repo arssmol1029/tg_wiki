@@ -3,6 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, MaybeInaccessibleMessageUnion
 from aiogram.fsm.context import FSMContext
 
+from tg_wiki.clients.http import HttpClient
 from tg_wiki.services.wiki_service import search_articles
 from tg_wiki.bot.states import SearchState
 from tg_wiki.bot.keyboards import search_results_keyboard
@@ -11,8 +12,8 @@ from tg_wiki.bot.keyboards import search_results_keyboard
 router = Router()
 
 
-async def search_handler(message: Message | MaybeInaccessibleMessageUnion, query: str) -> None:
-    results = await search_articles(query)
+async def search_handler(message: Message | MaybeInaccessibleMessageUnion, query: str, http: HttpClient) -> None:
+    results = await search_articles(http, query)
 
     if not results:
         await message.answer("Ошибка")
@@ -27,7 +28,7 @@ async def search_handler(message: Message | MaybeInaccessibleMessageUnion, query
 
 
 @router.message(Command("search"))
-async def search_message_handler(message: Message, state: FSMContext) -> None:
+async def search_message_handler(message: Message, http: HttpClient, state: FSMContext) -> None:
     await state.clear()
     if not message.text:
         await message.answer("Ошибка")
@@ -44,15 +45,15 @@ async def search_message_handler(message: Message, state: FSMContext) -> None:
             await message.answer("Введите запрос для поиска")
             await state.set_state(SearchState.waiting_for_query)
     else:
-        await search_handler(message, query)
+        await search_handler(message, query, http)
 
 
 @router.message(SearchState.waiting_for_query)
-async def process_search_query(message: Message, state: FSMContext) -> None:
+async def process_search_query(message: Message, http: HttpClient, state: FSMContext) -> None:
     if not message.text or not message.text.strip():
         await message.answer("Ошибка")
         return
     query = message.text.strip()
 
-    await search_handler(message, query)
+    await search_handler(message, query, http)
     await state.clear()

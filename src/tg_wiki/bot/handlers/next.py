@@ -5,6 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, MaybeInaccessibleMessageUnion, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
+from tg_wiki.clients.http import HttpClient
 from tg_wiki.services.wiki_service import get_next_article
 from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
 from tg_wiki.bot.keyboards import next_keyboard
@@ -13,8 +14,8 @@ from tg_wiki.bot.keyboards import next_keyboard
 router = Router()
 
 
-async def next_handler(message: Message | MaybeInaccessibleMessageUnion) -> None:
-    article = await get_next_article()
+async def next_handler(message: Message | MaybeInaccessibleMessageUnion, http: HttpClient) -> None:
+    article = await get_next_article(http)
     if not article:
         await message.answer("Ошибка")
         return
@@ -42,17 +43,17 @@ async def next_handler(message: Message | MaybeInaccessibleMessageUnion) -> None
 
 
 @router.message(Command("next"))
-async def next_message_handler(message: Message, state: FSMContext) -> None:
+async def next_message_handler(message: Message, http: HttpClient, state: FSMContext) -> None:
     await state.clear()
-    await next_handler(message)
+    await next_handler(message, http)
 
 
 @router.callback_query(lambda c: c.data and c.data == "next")
-async def next_callback_handler(callback: CallbackQuery, state: FSMContext) -> None:
+async def next_callback_handler(callback: CallbackQuery, http: HttpClient, state: FSMContext) -> None:
     await state.clear()
     if not callback.message:
         await callback.answer("Ошибка")
         return
 
-    await next_handler(callback.message)
+    await next_handler(callback.message, http)
     await callback.answer()
