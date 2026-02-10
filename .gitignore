@@ -1,7 +1,8 @@
 .env
 .venv
 *.egg-info/
-*__pycache__/
+__pycache__/
+*.pyc
 
 # This file is needed to use pip on nixos
 default.nix
