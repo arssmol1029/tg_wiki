@@ -1,3 +1,5 @@
+import html
+
 from aiogram import Router
 from aiogram.types import CallbackQuery
 
@@ -43,7 +45,7 @@ async def select_callback_handler(callback: CallbackQuery) -> None:
     keyboard = next_keyboard()
 
     pageid = article["pageid"]
-    full_text = f'<b><a href="{article["fullurl"]}">{article["title"]}</a></b>\n\n{article["extract"]}'
+    full_text = f'<b><a href="{html.escape(article["fullurl"])}">{html.escape(article["title"])}</a></b>\n\n{html.escape(article["extract"])}'
 
     if is_edit or not (article.get("thumbnail", None) and article["thumbnail"].get("source", None)):
         await send_page(callback.message, full_text, pageid=pageid, page=page_num, is_edit=is_edit, parse_mode="HTML", reply_markup=keyboard)

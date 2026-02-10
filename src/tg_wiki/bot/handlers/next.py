@@ -1,3 +1,5 @@
+import html
+
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message, MaybeInaccessibleMessageUnion, CallbackQuery
@@ -20,7 +22,7 @@ async def next_handler(message: Message | MaybeInaccessibleMessageUnion) -> None
     keyboard = next_keyboard()
 
     pageid = article["pageid"]
-    full_text = f'<b><a href="{article["fullurl"]}">{article["title"]}</a></b>\n\n{article["extract"]}'
+    full_text = f'<b><a href="{html.escape(article["fullurl"])}">{html.escape(article["title"])}</a></b>\n\n{html.escape(article["extract"])}'
 
     if not (article.get("thumbnail", None) and article["thumbnail"].get("source", None)):
         await send_page(message, full_text, pageid=pageid, parse_mode="HTML", reply_markup=keyboard)
