@@ -4,6 +4,7 @@ from tg_wiki.clients.http import get
 
 
 RUWIKI_API = "https://ru.wikipedia.org/w/api.php"
+IMAGE_WIDTH = 300
 
 
 async def fetch_random() -> Optional[dict]:
@@ -19,10 +20,11 @@ async def fetch_random() -> Optional[dict]:
         "generator": "random",
         "grnlimit": 1,
         "grnnamespace": 0,
-        "prop": "extracts|info",
+        "prop": "extracts|info|pageimages",
         "exintro": 1,
         "explaintext": 1,
         "inprop": "url",
+        "pithumbsize": IMAGE_WIDTH,
     }
     data = await get(RUWIKI_API, params=params)
     if not isinstance(data, dict):
@@ -48,10 +50,11 @@ async def fetch_by_title(title: str) -> Optional[dict]:
         "action": "query",
         "format": "json",
         "titles": title,
-        "prop": "extracts|info",
+        "prop": "extracts|info|pageimages",
         "exintro": 1,
         "explaintext": 1,
         "inprop": "url",
+        "pithumbsize": IMAGE_WIDTH,
     }
     data = await get(RUWIKI_API, params=params)
     if not isinstance(data, dict):
@@ -77,10 +80,11 @@ async def fetch_by_pageid(pageid: str) -> Optional[dict]:
         "action": "query",
         "format": "json",
         "pageids": pageid,
-        "prop": "extracts|info",
+        "prop": "extracts|info|pageimages",
         "exintro": 1,
         "explaintext": 1,
         "inprop": "url",
+        "pithumbsize": IMAGE_WIDTH,
     }
     data = await get(RUWIKI_API, params=params)
     if not isinstance(data, dict):

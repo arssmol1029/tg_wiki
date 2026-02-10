@@ -3,7 +3,7 @@ from typing import Optional
 import tg_wiki.wiki.client as wiki
 
 
-async def is_valid_article(article: dict, min_length: int = 0) -> bool:
+async def is_valid_article(article: dict, min_length: int = 0, max_length: int = 10000) -> bool:
     '''
     Filters the raw article data
     

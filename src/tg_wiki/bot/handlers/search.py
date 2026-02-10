@@ -60,6 +60,13 @@ async def wiki_select(callback: CallbackQuery):
     if not article:
         await callback.answer("Ошибка")
         return
+    
+    if article.get("thumbnail", None) and article["thumbnail"].get("source", None):
+        await callback.message.answer_photo(
+            photo=article["thumbnail"]["source"],
+            caption=f"{article['title']}\n\n{article['extract']}"
+        )
+        return
 
     await callback.message.answer(
         f"{article['title']}\n\n{article['extract']}"

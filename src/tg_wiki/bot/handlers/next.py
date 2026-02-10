@@ -14,6 +14,14 @@ async def next_handler(message: Message) -> None:
     if not article:
         await message.answer("Ошибка")
         return
+    
+    if article.get("thumbnail", None) and article["thumbnail"].get("source", None):
+        await message.answer_photo(
+            photo=article["thumbnail"]["source"],
+            caption=f"{article['title']}\n\n{article['extract']}"
+        )
+        return
+
     await message.answer(
         f"{article['title']}\n\n{article['extract']}"
     )
