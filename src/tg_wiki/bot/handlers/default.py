@@ -16,7 +16,5 @@ async def default_handler(message: Message, state: FSMContext) -> None:
         query = message.quote.text.strip()
     else:
         return
-    
-    print(f"Default handler: {query}")
-    
+        
     await search_handler(message, query)
