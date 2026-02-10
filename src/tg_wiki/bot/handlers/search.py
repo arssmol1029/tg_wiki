@@ -14,9 +14,18 @@ async def search_message_handler(message: Message) -> None:
         await message.answer("Ошибка")
         return
     parts = message.text.split(maxsplit=1)
-    title = parts[1] if len(parts) > 1 else ""
+    query = parts[1] if len(parts) > 1 else ""
 
-    results = await search_articles(title)
+    if not query:
+        if message.quote and message.quote.text:
+            query = message.quote.text.strip()
+        elif message.reply_to_message and message.reply_to_message.text:
+            query = message.reply_to_message.text.strip()
+        else:
+            await message.answer("Ошибка")
+            return
+
+    results = await search_articles(query)
 
     if not results:
         await message.answer("Ошибка")
