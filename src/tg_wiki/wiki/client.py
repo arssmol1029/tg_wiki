@@ -168,7 +168,7 @@ async def search_by_text(query: str, limit: int = 5) -> list[dict[str, str]]:
         limit: The maximum number of search results to return.
 
     Returns:
-        A list of article titles that match the search query.
+        A list of dictionaries containing the title and pageid of the found articles.
     '''
     params = {
         "action": "query",
