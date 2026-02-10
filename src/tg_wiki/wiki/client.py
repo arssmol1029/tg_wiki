@@ -138,16 +138,25 @@ async def opensearch(query: str, limit: int = 5) -> list[dict[str, str]]:
     if not titles:
         return []
     
-    pageids = []
+    params = {
+        "action": "query",
+        "format": "json",
+        "titles": "|".join(titles),
+        "prop": "extracts|info|pageimages",
+        "exintro": 1,
+        "explaintext": 1,
+        "inprop": "url",
+        "pithumbsize": IMAGE_WIDTH,
+    }
 
-    for title in titles:
-        result = await fetch_by_title(title)
-        if result:
-            pageids.append(result.get("pageid", ""))
-        else:
-            pageids.append("")
+    data = await get(RUWIKI_API, params=params)
+    if not isinstance(data, dict):
+        return []
+    pages = data.get("query", {}).get("pages", {})
+    if not pages:
+        return []
 
-    return [{"title": title, "pageid": pageid} for title, pageid in zip(titles, pageids)]
+    return [{"title": page.get("title", ""), "pageid": page.get("pageid", "")} for page in pages.values()]
 
 
 async def search_by_text(query: str, limit: int = 5) -> list[dict[str, str]]:
