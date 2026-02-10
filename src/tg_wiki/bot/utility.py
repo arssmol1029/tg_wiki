@@ -1,4 +1,6 @@
-from aiogram.types import Message, MaybeInaccessibleMessageUnion, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, MaybeInaccessibleMessageUnion, InlineKeyboardMarkup
+
+from tg_wiki.bot.keyboards import nav_keyboard
 
 
 MAX_MESSAGE_LENGTH = 1024
@@ -31,7 +33,7 @@ async def send_page(
     page: int = 1,
     is_edit: bool = False,
     parse_mode: str = "HTML",
-    reply_markup = None,
+    reply_markup: InlineKeyboardMarkup | None = None,
     max_len: int = MAX_MESSAGE_LENGTH
 ) -> None:
     chunks = split_text_pages(text, max_len)
@@ -51,30 +53,8 @@ async def send_page(
         else:
             await message.answer(chunks[page-1], parse_mode=parse_mode, reply_markup=reply_markup)
         return
-    
-    if page > 1:
-        left_cb = f"select:{page-1}:{pageid}"
-        left_text = "❮"
-    else:
-        left_cb = "noop"
-        left_text = "✕"
 
-    if page < total_pages:
-        right_cb = f"select:{page+1}:{pageid}"
-        right_text = "❯"
-    else:
-        right_cb = "noop"
-        right_text = "✕"
-
-    nav_row = [
-        InlineKeyboardButton(text=left_text, callback_data=left_cb),
-        InlineKeyboardButton(text=f"{page}/{total_pages}", callback_data="noop"),
-        InlineKeyboardButton(text=right_text, callback_data=right_cb),
-    ]
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[nav_row]
-    )
+    keyboard = nav_keyboard(page, total_pages, pageid)
 
     if reply_markup:
         keyboard.inline_keyboard.extend(reply_markup.inline_keyboard)
@@ -83,4 +63,3 @@ async def send_page(
         await message.edit_text(chunks[page-1], parse_mode=parse_mode, reply_markup=keyboard)
     else:
         await message.answer(chunks[page-1], parse_mode=parse_mode, reply_markup=keyboard)
-    

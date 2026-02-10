@@ -1,10 +1,11 @@
 from aiogram import Router
 from aiogram.filters import Command
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, MaybeInaccessibleMessageUnion
+from aiogram.types import Message, MaybeInaccessibleMessageUnion
 from aiogram.fsm.context import FSMContext
 
 from tg_wiki.services.wiki_service import search_articles
 from tg_wiki.bot.states import SearchState
+from tg_wiki.bot.keyboards import search_results_keyboard
 
 
 router = Router()
@@ -17,17 +18,7 @@ async def search_handler(message: Message | MaybeInaccessibleMessageUnion, query
         await message.answer("Ошибка")
         return
     
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text=result["title"],
-                    callback_data=f"select:{result['pageid']}"
-                )
-            ]
-            for result in results
-        ]
-    )
+    keyboard = search_results_keyboard(results)
 
     await message.answer(
         "Результаты поиска:",

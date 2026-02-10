@@ -1,10 +1,11 @@
 from aiogram import Router
 from aiogram.filters import Command
-from aiogram.types import Message, MaybeInaccessibleMessageUnion, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, MaybeInaccessibleMessageUnion, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
 from tg_wiki.services.wiki_service import get_next_article
 from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
+from tg_wiki.bot.keyboards import next_keyboard
 
 
 router = Router()
@@ -16,11 +17,7 @@ async def next_handler(message: Message | MaybeInaccessibleMessageUnion) -> None
         await message.answer("Ошибка")
         return
     
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="Следующий пост", callback_data="next")]
-        ]
-    )
+    keyboard = next_keyboard()
 
     pageid = article["pageid"]
     full_text = f'<b><a href="{article["fullurl"]}">{article["title"]}</a></b>\n\n{article["extract"]}'

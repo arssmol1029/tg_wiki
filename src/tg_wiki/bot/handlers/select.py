@@ -1,8 +1,9 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery
 
 from tg_wiki.services.wiki_service import get_article_by_pageid
 from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
+from tg_wiki.bot.keyboards import next_keyboard
 
 
 router = Router()
@@ -39,11 +40,7 @@ async def select_callback_handler(callback: CallbackQuery) -> None:
         await callback.answer("Ошибка")
         return
     
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="Следующий пост", callback_data="next")]
-        ]
-    )
+    keyboard = next_keyboard()
 
     pageid = article["pageid"]
     full_text = f'<b><a href="{article["fullurl"]}">{article["title"]}</a></b>\n\n{article["extract"]}'
