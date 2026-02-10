@@ -9,7 +9,7 @@ router = Router()
 
 # Command format: select:{pageid} or select:{page_num}:{pageid}
 @router.callback_query(lambda c: c.data and c.data.startswith("select:"))
-async def select_callback_handler(callback: CallbackQuery):
+async def select_callback_handler(callback: CallbackQuery) -> None:
     if not callback.data:
         await callback.answer()
         return

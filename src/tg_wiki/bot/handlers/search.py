@@ -1,17 +1,13 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, MaybeInaccessibleMessageUnion
-from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
 from tg_wiki.services.wiki_service import search_articles
+from tg_wiki.bot.states import SearchState
 
 
 router = Router()
-
-
-class SearchState(StatesGroup):
-    waiting_for_query = State()
 
 
 async def search_handler(message: Message | MaybeInaccessibleMessageUnion, query: str) -> None:
@@ -41,6 +37,7 @@ async def search_handler(message: Message | MaybeInaccessibleMessageUnion, query
 
 @router.message(Command("search"))
 async def search_message_handler(message: Message, state: FSMContext) -> None:
+    await state.clear()
     if not message.text:
         await message.answer("Ошибка")
         return
@@ -60,7 +57,7 @@ async def search_message_handler(message: Message, state: FSMContext) -> None:
 
 
 @router.message(SearchState.waiting_for_query)
-async def process_search_query(message: Message, state: FSMContext):
+async def process_search_query(message: Message, state: FSMContext) -> None:
     if not message.text or not message.text.strip():
         await message.answer("Ошибка")
         return

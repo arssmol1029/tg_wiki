@@ -12,6 +12,7 @@ from tg_wiki.bot.handlers import select
 from tg_wiki.bot.handlers import noop
 from tg_wiki.bot.handlers import help
 from tg_wiki.bot.handlers import default
+from tg_wiki.bot.handlers import cancel
 
 
 async def main() -> None:
@@ -20,12 +21,13 @@ async def main() -> None:
     bot = Bot(token=os.environ["BOT_TOKEN"])
     dp = Dispatcher()
 
+    dp.include_router(cancel.router)
     dp.include_router(start.router)
     dp.include_router(next.router)
-    dp.include_router(search.router)
     dp.include_router(select.router)
     dp.include_router(noop.router)
     dp.include_router(help.router)
+    dp.include_router(search.router)
     dp.include_router(default.router)
 
     commands = [
@@ -33,6 +35,7 @@ async def main() -> None:
         BotCommand(command="help", description="Показать доступные команды"),
         BotCommand(command="next", description="Следующая статья"),
         BotCommand(command="search", description="Найти статью по названию или ключевым словам"),
+        BotCommand(command="cancel", description="Отменить текущее действие"),
     ]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 

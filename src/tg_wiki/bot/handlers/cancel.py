@@ -1,5 +1,6 @@
 from aiogram import Router
-from aiogram.types import Message
+from aiogram.filters import Command
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 
 from tg_wiki.services.wiki_service import search_articles
@@ -9,14 +10,7 @@ from tg_wiki.bot.states import SearchState
 router = Router()
 
 
-@router.message()
+@router.message(Command("cancel"))
 async def default_handler(message: Message, state: FSMContext) -> None:
-    if message.quote and message.quote.text:
-        await state.clear()
-        query = message.quote.text.strip()
-    else:
-        return
-    
-    print(f"Default handler: {query}")
-    
-    await search_handler(message, query)
+    await state.clear()
+    await message.answer("Отмена")

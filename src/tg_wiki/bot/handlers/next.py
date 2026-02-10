@@ -1,6 +1,7 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message, MaybeInaccessibleMessageUnion, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.fsm.context import FSMContext
 
 from tg_wiki.services.wiki_service import get_next_article
 from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
@@ -42,12 +43,14 @@ async def next_handler(message: Message | MaybeInaccessibleMessageUnion) -> None
 
 
 @router.message(Command("next"))
-async def next_massage_handler(message: Message) -> None:
+async def next_massage_handler(message: Message, state: FSMContext) -> None:
+    await state.clear()
     await next_handler(message)
 
 
 @router.callback_query(lambda c: c.data and c.data == "next")
-async def next_callback_handler(callback: CallbackQuery):
+async def next_callback_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.clear()
     if not callback.message:
         await callback.answer("Ошибка")
         return
