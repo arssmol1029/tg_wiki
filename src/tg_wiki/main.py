@@ -15,32 +15,34 @@ async def main() -> None:
     bot = Bot(token=os.environ["BOT_TOKEN"])
     dp = Dispatcher()
     http = HttpClient()
-    await http.start()
-    dp.workflow_data["http"] = http
-
-    dp.include_router(cancel.router)
-    dp.include_router(start.router)
-    dp.include_router(next.router)
-    dp.include_router(select.router)
-    dp.include_router(noop.router)
-    dp.include_router(help.router)
-    dp.include_router(search.router)
-    dp.include_router(default.router)
-    commands = [
-        BotCommand(command="start", description="Запустить бота"),
-        BotCommand(command="help", description="Показать доступные команды"),
-        BotCommand(command="next", description="Следующая статья"),
-        BotCommand(command="search", description="Найти статью по названию или ключевым словам"),
-        BotCommand(command="cancel", description="Отменить текущее действие"),
-    ]
-    await bot.set_my_commands(commands, BotCommandScopeDefault())
 
     try:
+        await http.start()
+        dp.workflow_data["http"] = http
+
+        dp.include_router(cancel.router)
+        dp.include_router(start.router)
+        dp.include_router(next.router)
+        dp.include_router(select.router)
+        dp.include_router(noop.router)
+        dp.include_router(help.router)
+        dp.include_router(search.router)
+        dp.include_router(default.router)
+
+        commands = [
+            BotCommand(command="start", description="Запустить бота"),
+            BotCommand(command="help", description="Показать доступные команды"),
+            BotCommand(command="next", description="Следующая статья"),
+            BotCommand(command="search", description="Найти статью по названию или ключевым словам"),
+            BotCommand(command="cancel", description="Отменить текущее действие"),
+        ]
+        await bot.set_my_commands(commands, BotCommandScopeDefault())
+
         await dp.start_polling(bot)
     finally:
         await http.close()
         await bot.session.close()
 
 
-if __name__ == "__main__":
+def run() -> None:
     asyncio.run(main())
