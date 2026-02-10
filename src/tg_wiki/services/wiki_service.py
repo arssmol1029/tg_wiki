@@ -3,6 +3,9 @@ from typing import Optional
 import tg_wiki.wiki.client as wiki
 
 
+MAX_ATTEMPTS = 10
+
+
 def is_valid_article(article: dict, min_length: int = 0, max_length: int = 10000) -> bool:
     '''
     Filters the raw article data
@@ -30,7 +33,7 @@ async def get_next_article(min_length: int = 100) -> Optional[dict]:
     Returns:
         A dictionary containing the article's information.
     '''
-    while True:
+    for _ in range(MAX_ATTEMPTS):
         article = await wiki.fetch_random()
         if article:
             if is_valid_article(article, min_length=min_length):
