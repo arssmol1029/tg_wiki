@@ -9,6 +9,7 @@ from tg_wiki.clients.http import HttpClient
 from tg_wiki.services.wiki_service import get_next_article
 from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
 from tg_wiki.bot.keyboards import next_keyboard
+import tg_wiki.bot.messages as msg
 
 
 router = Router()
@@ -17,7 +18,7 @@ router = Router()
 async def next_handler(message: Message | MaybeInaccessibleMessageUnion, http: HttpClient) -> None:
     article = await get_next_article(http)
     if not article:
-        await message.answer("Ошибка")
+        await message.answer(msg.ERR_NETWORK)
         return
     
     keyboard = next_keyboard()
@@ -52,7 +53,7 @@ async def next_message_handler(message: Message, http: HttpClient, state: FSMCon
 async def next_callback_handler(callback: CallbackQuery, http: HttpClient, state: FSMContext) -> None:
     await state.clear()
     if not callback.message:
-        await callback.answer("Ошибка")
+        await callback.answer(msg.ERR_MESSAGE_EMPTY)
         return
 
     await next_handler(callback.message, http)

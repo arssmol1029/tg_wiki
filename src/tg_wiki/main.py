@@ -33,7 +33,7 @@ async def main() -> None:
             BotCommand(command="start", description="Запустить бота"),
             BotCommand(command="help", description="Показать доступные команды"),
             BotCommand(command="next", description="Следующая статья"),
-            BotCommand(command="search", description="Найти статью по названию или ключевым словам"),
+            BotCommand(command="search", description="Поиск статьи по запросу"),
             BotCommand(command="cancel", description="Отменить текущее действие"),
         ]
         await bot.set_my_commands(commands, BotCommandScopeDefault())
