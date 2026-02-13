@@ -5,8 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, MaybeInaccessibleMessageUnion, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from tg_wiki.clients.http import HttpClient
-from tg_wiki.services.wiki_service import get_next_article
+from tg_wiki.services.wiki_service import WikiService
 from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
 from tg_wiki.bot.keyboards import next_keyboard
 import tg_wiki.bot.messages as msg
@@ -16,9 +15,9 @@ router = Router()
 
 
 async def next_handler(
-    message: Message | MaybeInaccessibleMessageUnion, http: HttpClient
+    message: Message | MaybeInaccessibleMessageUnion, wiki_service: WikiService
 ) -> None:
-    article = await get_next_article(http)
+    article = await wiki_service.get_next_article()
     if not article:
         await message.answer(msg.ERR_NETWORK)
         return
@@ -53,20 +52,20 @@ async def next_handler(
 
 @router.message(Command("next"))
 async def next_message_handler(
-    message: Message, http: HttpClient, state: FSMContext
+    message: Message, wiki_service: WikiService, state: FSMContext
 ) -> None:
     await state.clear()
-    await next_handler(message, http)
+    await next_handler(message, wiki_service)
 
 
 @router.callback_query(lambda c: c.data and c.data == "next")
 async def next_callback_handler(
-    callback: CallbackQuery, http: HttpClient, state: FSMContext
+    callback: CallbackQuery, wiki_service: WikiService, state: FSMContext
 ) -> None:
     await state.clear()
     if not callback.message:
         await callback.answer(msg.ERR_MESSAGE_EMPTY)
         return
 
-    await next_handler(callback.message, http)
+    await next_handler(callback.message, wiki_service)
     await callback.answer()

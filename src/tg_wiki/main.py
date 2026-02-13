@@ -6,6 +6,7 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 from dotenv import load_dotenv
 
 from tg_wiki.clients.http import HttpClient
+from tg_wiki.services.wiki_service import WikiService
 from tg_wiki.bot.handlers import (
     cancel,
     default,
@@ -27,7 +28,8 @@ async def main() -> None:
 
     try:
         await http.start()
-        dp.workflow_data["http"] = http
+        wiki_service = WikiService(http)
+        dp.workflow_data["wiki_service"] = wiki_service
 
         dp.include_router(cancel.router)
         dp.include_router(start.router)

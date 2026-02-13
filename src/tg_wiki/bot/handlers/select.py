@@ -3,8 +3,7 @@ import html
 from aiogram import Router
 from aiogram.types import CallbackQuery
 
-from tg_wiki.clients.http import HttpClient
-from tg_wiki.services.wiki_service import get_article_by_pageid
+from tg_wiki.services.wiki_service import WikiService
 from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
 from tg_wiki.bot.keyboards import next_keyboard
 import tg_wiki.bot.messages as msg
@@ -15,7 +14,9 @@ router = Router()
 
 # Command format: select:{pageid} or select:{page_num}:{pageid}
 @router.callback_query(lambda c: c.data and c.data.startswith("select:"))
-async def select_callback_handler(callback: CallbackQuery, http: HttpClient) -> None:
+async def select_callback_handler(
+    callback: CallbackQuery, wiki_service: WikiService
+) -> None:
     if not callback.data:
         await callback.answer()
         return
@@ -35,7 +36,7 @@ async def select_callback_handler(callback: CallbackQuery, http: HttpClient) -> 
         await callback.answer(msg.ERR_BAD_INPUT)
         return
 
-    article = await get_article_by_pageid(http, pageid)
+    article = await wiki_service.get_article_by_pageid(pageid)
 
     if not callback.message:
         await callback.answer(msg.ERR_MESSAGE_EMPTY)

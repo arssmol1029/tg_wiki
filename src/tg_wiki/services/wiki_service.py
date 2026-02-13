@@ -4,155 +4,162 @@ from tg_wiki.clients.http import HttpClient, Json
 import tg_wiki.wiki.client as wiki
 
 
-def is_valid_article(
-    article: dict, min_length: int = 0, max_length: int = 10000
-) -> bool:
-    """
-    Filters the raw article data
+class WikiService:
+    _http: HttpClient
 
-    Args:
-        article: The raw data of the article as returned by the Wikipedia API.
+    def __init__(self, http: HttpClient) -> None:
+        self._http = http
 
-    Returns:
-        True if the article is valid and contains enough information, False otherwise.
-    """
-    if article.get("missing") is not None:
-        return False
-    if not article.get("pageid"):
-        return False
-    if not article.get("title", "").strip():
-        return False
-    extract = article.get("extract", "").strip()
-    if not extract:
-        return False
-    if len(extract) > max_length:
-        return False
-    if len(extract.strip()) < min_length:
-        return False
-    return True
+    @property
+    def http(self) -> HttpClient:
+        return self._http
 
+    @staticmethod
+    def is_valid_article(
+        article: dict, min_length: int = 0, max_length: int = 10000
+    ) -> bool:
+        """
+        Filters the raw article data
 
-async def get_next_article(http: HttpClient, min_length: int = 100) -> Optional[dict]:
-    """
-    Fetches a random article from the Ru Wikipedia and checks if it's valid.
+        Args:
+            article: The raw data of the article as returned by the Wikipedia API.
 
-    Returns:
-        A dictionary containing the article's information or None if no valid article was found.
-    """
-    data = await wiki.fetch_random(http)
-    if not isinstance(data, dict):
-        return None
-    pages = data.get("query", {}).get("pages", {})
-    if not pages:
-        return None
+        Returns:
+            True if the article is valid and contains enough information, False otherwise.
+        """
+        if article.get("missing") is not None:
+            return False
+        if not article.get("pageid"):
+            return False
+        if not article.get("title", "").strip():
+            return False
+        extract = article.get("extract", "").strip()
+        if not extract:
+            return False
+        if len(extract) > max_length:
+            return False
+        if len(extract.strip()) < min_length:
+            return False
+        return True
 
-    article = next(iter(pages.values()))
-    if not is_valid_article(article):
-        return None
+    async def get_next_article(self, min_length: int = 100) -> Optional[dict]:
+        """
+        Fetches a random article from the Ru Wikipedia and checks if it's valid.
 
-    return article
+        Returns:
+            A dictionary containing the article's information or None if no valid article was found.
+        """
+        data = await wiki.fetch_random(self.http)
+        if not isinstance(data, dict):
+            return None
+        pages = data.get("query", {}).get("pages", {})
+        if not pages:
+            return None
 
+        article = next(iter(pages.values()))
+        if not self.is_valid_article(article):
+            return None
 
-async def get_article_by_title(http: HttpClient, title: str) -> Optional[dict]:
-    """
-    Fetches an article by its title from the Ru Wikipedia and checks if it's valid.
+        return article
 
-    Args:
-        title: The title of the article to fetch.
+    async def get_article_by_title(self, title: str) -> Optional[dict]:
+        """
+        Fetches an article by its title from the Ru Wikipedia and checks if it's valid.
 
-    Returns:
-        A dictionary containing the article's information, or None if no valid article was found.
-    """
-    data = await wiki.fetch_by_title(http, [title])
-    if not isinstance(data, dict):
-        return None
-    pages = data.get("query", {}).get("pages", {})
-    if not pages:
-        return None
+        Args:
+            title: The title of the article to fetch.
 
-    article = next(iter(pages.values()))
-    if not is_valid_article(article):
-        return None
+        Returns:
+            A dictionary containing the article's information, or None if no valid article was found.
+        """
+        data = await wiki.fetch_by_title(self.http, [title])
+        if not isinstance(data, dict):
+            return None
+        pages = data.get("query", {}).get("pages", {})
+        if not pages:
+            return None
 
-    return article
+        article = next(iter(pages.values()))
+        if not self.is_valid_article(article):
+            return None
 
+        return article
 
-async def get_article_by_pageid(http: HttpClient, pageid: str) -> Optional[dict]:
-    """
-    Fetches an article by its pageid from the Ru Wikipedia and checks if it's valid.
+    async def get_article_by_pageid(self, pageid: str) -> Optional[dict]:
+        """
+        Fetches an article by its pageid from the Ru Wikipedia and checks if it's valid.
 
-    Args:
-        pageid: The pageid of the article to fetch.
+        Args:
+            pageid: The pageid of the article to fetch.
 
-    Returns:
-        A dictionary containing the article's information, or None if no valid article was found.
-    """
-    data = await wiki.fetch_by_pageid(http, pageid)
-    if not isinstance(data, dict):
-        return None
-    pages = data.get("query", {}).get("pages", {})
-    if not pages:
-        return None
+        Returns:
+            A dictionary containing the article's information, or None if no valid article was found.
+        """
+        data = await wiki.fetch_by_pageid(self.http, pageid)
+        if not isinstance(data, dict):
+            return None
+        pages = data.get("query", {}).get("pages", {})
+        if not pages:
+            return None
 
-    article = next(iter(pages.values()))
-    if not is_valid_article(article):
-        return None
+        article = next(iter(pages.values()))
+        if not self.is_valid_article(article):
+            return None
 
-    return article
+        return article
 
+    async def search_articles(self, query: str, limit: int = 5) -> list[dict[str, str]]:
+        """
+        Searches for articles by query on the Ru Wikipedia.
 
-async def search_articles(
-    http: HttpClient, query: str, limit: int = 5
-) -> list[dict[str, str]]:
-    """
-    Searches for articles by query on the Ru Wikipedia.
+        Args:
+            query: The query to search for.
 
-    Args:
-        query: The query to search for.
+        Returns:
+            A list of dictionaries containing the title and URL of the found articles.
+        """
+        data = await wiki.search_by_title(self.http, query, limit=limit)
+        if not data or not isinstance(data, list) or len(data) < 2:
+            return []
+        titles = data[1]
 
-    Returns:
-        A list of dictionaries containing the title and URL of the found articles.
-    """
-    data = await wiki.search_by_title(http, query, limit=limit)
-    if not data or not isinstance(data, list) or len(data) < 2:
-        return []
-    titles = data[1]
+        data_title = await wiki.fetch_by_title(self.http, titles)
+        if not isinstance(data_title, dict):
+            return []
+        pages_title = data_title.get("query", {}).get("pages", {})
+        if not pages_title:
+            return []
 
-    data_title = await wiki.fetch_by_title(http, titles)
-    if not isinstance(data_title, dict):
-        return []
-    pages_title = data_title.get("query", {}).get("pages", {})
-    if not pages_title:
-        return []
+        results = []
+        for page in pages_title.values():
+            if self.is_valid_article(page):
+                results.append(
+                    {
+                        "title": page.get("title", ""),
+                        "pageid": page.get("pageid", ""),
+                        "url": page.get("fullurl", ""),
+                    }
+                )
 
-    results = []
-    for page in pages_title.values():
-        if is_valid_article(page):
-            results.append(
-                {
-                    "title": page.get("title", ""),
-                    "pageid": page.get("pageid", ""),
-                    "url": page.get("url", ""),
-                }
-            )
+        if len(results) >= limit:
+            return results
 
-    if len(results) >= limit:
+        data_text = await wiki.search_by_text(
+            self.http, query, limit=limit - len(results)
+        )
+        if not isinstance(data_text, dict):
+            return results
+        pages_text = data_text.get("query", {}).get("pages", {})
+        if not pages_text:
+            return results
+
+        for page in pages_text.values():
+            if self.is_valid_article(page):
+                results.append(
+                    {
+                        "title": page.get("title", ""),
+                        "pageid": page.get("pageid", ""),
+                        "url": page.get("fullurl", ""),
+                    }
+                )
         return results
-
-    data_text = await wiki.search_by_text(http, query, limit=limit - len(results))
-    if not isinstance(data_text, dict):
-        return results
-    pages_text = data_text.get("query", {}).get("pages", {})
-    if not pages_text:
-        return results
-
-    for page in pages_text.values():
-        if is_valid_article(page):
-            results.append(
-                {
-                    "title": page.get("title", ""),
-                    "pageid": page.get("pageid", ""),
-                    "url": page.get("url", ""),
-                }
-            )
-    return results
