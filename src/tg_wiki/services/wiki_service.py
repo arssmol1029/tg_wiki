@@ -93,7 +93,7 @@ class WikiService:
 
         return article
 
-    async def get_article_by_pageid(self, pageid: str) -> Optional[dict]:
+    async def get_article_by_pageid(self, pageid: str) -> Optional[list]:
         """
         Fetches an article by its pageid from the Ru Wikipedia and checks if it's valid.
 
@@ -130,60 +130,79 @@ class WikiService:
         Returns:
             A list of dictionaries containing the title and URL of the found articles.
         """
+        titles: set[str] = set()
+
         try:
-            data = await wiki.search_by_title(self.http, query, limit=limit)
+            data_title = await wiki.search_by_title(self.http, query, limit=limit)
         except (HttpRequestError, HttpNotStartedError):
             return []
 
-        if not data or not isinstance(data, list) or len(data) < 2:
+        if (
+            isinstance(data_title, list)
+            and len(data_title) >= 2
+            and isinstance(data_title[1], list)
+        ):
+            for title in data_title[1]:
+                if not isinstance(title, str) and not title.strip():
+                    continue
+                titles.add(title.strip())
+                if len(titles) >= limit:
+                    break
+
+        if len(titles) < limit:
+            try:
+                data_text = await wiki.search_by_text(
+                    self.http, query, limit=limit - len(titles)
+                )
+            except (HttpRequestError, HttpNotStartedError):
+                data_text = None
+
+            if isinstance(data_text, dict):
+                search_items = data_text.get("query", {}).get("search", [])
+                if isinstance(search_items, list):
+                    for item in search_items:
+                        if len(titles) >= limit:
+                            break
+                        if not isinstance(item, dict):
+                            continue
+                        title = str(item.get("title", "")).strip()
+                        if title.strip():
+                            titles.add(title)
+
+        if not titles:
             return []
-        titles = data[1]
 
         try:
-            data_title = await wiki.fetch_by_title(self.http, titles)
+            pages_data = await wiki.fetch_by_title(self.http, list(titles))
         except (HttpRequestError, HttpNotStartedError):
             return []
 
-        if not isinstance(data_title, dict):
-            return []
-        pages_title = data_title.get("query", {}).get("pages", {})
-        if not pages_title:
+        if not isinstance(pages_data, dict):
             return []
 
-        results: set[dict[str, str]] = set()
-        for page in pages_title.values():
-            if self.is_valid_article(page):
-                results.add(
+        pages = pages_data.get("query", {}).get("pages", {})
+        if not isinstance(pages, dict) or not pages:
+            return []
+
+        out: list[dict[str, str]] = []
+        for page in pages.values():
+            if not page:
+                continue
+
+            if not self.is_valid_article(page):
+                continue
+
+            pageid = page.get("pageid")
+            url = page.get("fullurl", "")
+            title = page.get("title", "")
+
+            if pageid and url and title:
+                out.append(
                     {
-                        "title": page.get("title", ""),
-                        "pageid": str(page.get("pageid", "")),
-                        "url": page.get("fullurl", ""),
+                        "title": str(title),
+                        "pageid": str(pageid),
+                        "url": str(url),
                     }
                 )
 
-        if len(results) >= limit:
-            return list(results)
-
-        try:
-            data_text = await wiki.search_by_text(
-                self.http, query, limit=limit - len(results)
-            )
-        except (HttpRequestError, HttpNotStartedError):
-            return list(results)
-
-        if not isinstance(data_text, dict):
-            return list(results)
-        pages_text = data_text.get("query", {}).get("pages", {})
-        if not pages_text:
-            return list(results)
-
-        for page in pages_text.values():
-            if self.is_valid_article(page):
-                results.add(
-                    {
-                        "title": page.get("title", ""),
-                        "pageid": str(page.get("pageid", "")),
-                        "url": page.get("fullurl", ""),
-                    }
-                )
-        return list(results)
+        return out
