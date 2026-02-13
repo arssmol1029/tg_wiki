@@ -6,7 +6,16 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 from dotenv import load_dotenv
 
 from tg_wiki.clients.http import HttpClient
-from tg_wiki.bot.handlers import cancel, default, help, next, noop, search, select, start
+from tg_wiki.bot.handlers import (
+    cancel,
+    default,
+    help,
+    next,
+    noop,
+    search,
+    select,
+    start,
+)
 
 
 async def main() -> None:

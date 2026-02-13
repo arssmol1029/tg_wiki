@@ -13,4 +13,3 @@ router = Router()
 async def noop_handler(message: Message, state: FSMContext) -> None:
     await state.clear()
     await message.answer(msg.MSG_HELP)
-    

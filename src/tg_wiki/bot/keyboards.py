@@ -25,13 +25,17 @@ def nav_keyboard(page: int, total_pages: int, pageid: int) -> InlineKeyboardMark
         right_cb = "noop"
         right_text = "✕"
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text=left_text, callback_data=left_cb),
-            InlineKeyboardButton(text=f"{page}/{total_pages}", callback_data="noop"),
-            InlineKeyboardButton(text=right_text, callback_data=right_cb),
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text=left_text, callback_data=left_cb),
+                InlineKeyboardButton(
+                    text=f"{page}/{total_pages}", callback_data="noop"
+                ),
+                InlineKeyboardButton(text=right_text, callback_data=right_cb),
+            ]
         ]
-    ])
+    )
     return keyboard
 
 
@@ -40,11 +44,11 @@ def search_results_keyboard(results: list[dict[str, str]]) -> InlineKeyboardMark
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=result["title"],
-                    callback_data=f"select:{result['pageid']}"
+                    text=result["title"], callback_data=f"select:{result['pageid']}"
                 )
             ]
-            for result in results if result.get("title", None) and result.get("pageid", None)
+            for result in results
+            if result.get("title", None) and result.get("pageid", None)
         ]
     )
     return keyboard

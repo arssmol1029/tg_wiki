@@ -4,16 +4,18 @@ from tg_wiki.clients.http import HttpClient, Json
 import tg_wiki.wiki.client as wiki
 
 
-def is_valid_article(article: dict, min_length: int = 0, max_length: int = 10000) -> bool:
-    '''
+def is_valid_article(
+    article: dict, min_length: int = 0, max_length: int = 10000
+) -> bool:
+    """
     Filters the raw article data
-    
+
     Args:
         article: The raw data of the article as returned by the Wikipedia API.
 
     Returns:
         True if the article is valid and contains enough information, False otherwise.
-    '''
+    """
     if article.get("missing") is not None:
         return False
     if not article.get("pageid"):
@@ -31,84 +33,86 @@ def is_valid_article(article: dict, min_length: int = 0, max_length: int = 10000
 
 
 async def get_next_article(http: HttpClient, min_length: int = 100) -> Optional[dict]:
-    '''
+    """
     Fetches a random article from the Ru Wikipedia and checks if it's valid.
-    
+
     Returns:
         A dictionary containing the article's information or None if no valid article was found.
-    '''
+    """
     data = await wiki.fetch_random(http)
     if not isinstance(data, dict):
         return None
     pages = data.get("query", {}).get("pages", {})
     if not pages:
         return None
-    
+
     article = next(iter(pages.values()))
     if not is_valid_article(article):
         return None
-    
+
     return article
 
 
 async def get_article_by_title(http: HttpClient, title: str) -> Optional[dict]:
-    '''
+    """
     Fetches an article by its title from the Ru Wikipedia and checks if it's valid.
-    
+
     Args:
         title: The title of the article to fetch.
 
     Returns:
         A dictionary containing the article's information, or None if no valid article was found.
-    '''
+    """
     data = await wiki.fetch_by_title(http, [title])
     if not isinstance(data, dict):
         return None
     pages = data.get("query", {}).get("pages", {})
     if not pages:
         return None
-    
+
     article = next(iter(pages.values()))
     if not is_valid_article(article):
         return None
-    
+
     return article
-    
+
 
 async def get_article_by_pageid(http: HttpClient, pageid: str) -> Optional[dict]:
-    '''
+    """
     Fetches an article by its pageid from the Ru Wikipedia and checks if it's valid.
-    
+
     Args:
         pageid: The pageid of the article to fetch.
 
     Returns:
         A dictionary containing the article's information, or None if no valid article was found.
-    '''
+    """
     data = await wiki.fetch_by_pageid(http, pageid)
     if not isinstance(data, dict):
         return None
     pages = data.get("query", {}).get("pages", {})
     if not pages:
         return None
-    
+
     article = next(iter(pages.values()))
     if not is_valid_article(article):
         return None
-    
-    return article
-    
 
-async def search_articles(http: HttpClient, query: str, limit: int = 5) -> list[dict[str, str]]:
-    '''
+    return article
+
+
+async def search_articles(
+    http: HttpClient, query: str, limit: int = 5
+) -> list[dict[str, str]]:
+    """
     Searches for articles by query on the Ru Wikipedia.
-    
+
     Args:
         query: The query to search for.
 
     Returns:
         A list of dictionaries containing the title and URL of the found articles.
-    '''
+    """
     data = await wiki.search_by_title(http, query, limit=limit)
     if not data or not isinstance(data, list) or len(data) < 2:
         return []
@@ -120,19 +124,21 @@ async def search_articles(http: HttpClient, query: str, limit: int = 5) -> list[
     pages_title = data_title.get("query", {}).get("pages", {})
     if not pages_title:
         return []
-    
+
     results = []
     for page in pages_title.values():
         if is_valid_article(page):
-            results.append({
-                "title": page.get("title", ""),
-                "pageid": page.get("pageid", ""),
-                "url": page.get("url", "")
-            })
-    
+            results.append(
+                {
+                    "title": page.get("title", ""),
+                    "pageid": page.get("pageid", ""),
+                    "url": page.get("url", ""),
+                }
+            )
+
     if len(results) >= limit:
         return results
-    
+
     data_text = await wiki.search_by_text(http, query, limit=limit - len(results))
     if not isinstance(data_text, dict):
         return results
@@ -142,9 +148,11 @@ async def search_articles(http: HttpClient, query: str, limit: int = 5) -> list[
 
     for page in pages_text.values():
         if is_valid_article(page):
-            results.append({
-                "title": page.get("title", ""),
-                "pageid": page.get("pageid", ""),
-                "url": page.get("url", "")
-            })
+            results.append(
+                {
+                    "title": page.get("title", ""),
+                    "pageid": page.get("pageid", ""),
+                    "url": page.get("url", ""),
+                }
+            )
     return results

@@ -10,27 +10,27 @@ from tg_wiki.bot.keyboards import search_results_keyboard
 import tg_wiki.bot.messages as msg
 
 
-
 router = Router()
 
 
-async def search_handler(message: Message | MaybeInaccessibleMessageUnion, query: str, http: HttpClient) -> None:
+async def search_handler(
+    message: Message | MaybeInaccessibleMessageUnion, query: str, http: HttpClient
+) -> None:
     results = await search_articles(http, query)
 
     if not results:
         await message.answer(msg.ERR_NOT_FOUND)
         return
-    
+
     keyboard = search_results_keyboard(results)
 
-    await message.answer(
-        msg.MSG_SEARCH_RESULTS,
-        reply_markup=keyboard
-    )
+    await message.answer(msg.MSG_SEARCH_RESULTS, reply_markup=keyboard)
 
 
 @router.message(Command("search"))
-async def search_message_handler(message: Message, http: HttpClient, state: FSMContext) -> None:
+async def search_message_handler(
+    message: Message, http: HttpClient, state: FSMContext
+) -> None:
     await state.clear()
     if not message.text:
         await message.answer(msg.ERR_BAD_INPUT)
@@ -51,7 +51,9 @@ async def search_message_handler(message: Message, http: HttpClient, state: FSMC
 
 
 @router.message(SearchState.waiting_for_query)
-async def process_search_query(message: Message, http: HttpClient, state: FSMContext) -> None:
+async def process_search_query(
+    message: Message, http: HttpClient, state: FSMContext
+) -> None:
     if not message.text or not message.text.strip():
         await message.answer(msg.ERR_BAD_INPUT)
         return

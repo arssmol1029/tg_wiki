@@ -19,7 +19,7 @@ def split_text_pages(text: str, max_len: int = MAX_MESSAGE_LENGTH) -> list[str]:
             part = part[:last_space]
 
         chunks.append(part)
-        remaining = remaining[len(part):].lstrip()
+        remaining = remaining[len(part) :].lstrip()
 
     if remaining:
         chunks.append(remaining)
@@ -29,12 +29,13 @@ def split_text_pages(text: str, max_len: int = MAX_MESSAGE_LENGTH) -> list[str]:
 
 async def send_page(
     message: Message | MaybeInaccessibleMessageUnion,
-    text: str, pageid: int,
+    text: str,
+    pageid: int,
     page: int = 1,
     is_edit: bool = False,
     parse_mode: str = "HTML",
     reply_markup: InlineKeyboardMarkup | None = None,
-    max_len: int = MAX_MESSAGE_LENGTH
+    max_len: int = MAX_MESSAGE_LENGTH,
 ) -> None:
     chunks = split_text_pages(text, max_len)
     total_pages = len(chunks)
@@ -42,16 +43,20 @@ async def send_page(
     if page < 1 or page > total_pages:
         await message.answer("Ошибка")
         return
-    
+
     if not chunks:
         await message.answer("Ошибка")
         return
 
     if total_pages == 1:
         if is_edit and isinstance(message, Message):
-            await message.edit_text(chunks[page-1], parse_mode=parse_mode, reply_markup=reply_markup)
+            await message.edit_text(
+                chunks[page - 1], parse_mode=parse_mode, reply_markup=reply_markup
+            )
         else:
-            await message.answer(chunks[page-1], parse_mode=parse_mode, reply_markup=reply_markup)
+            await message.answer(
+                chunks[page - 1], parse_mode=parse_mode, reply_markup=reply_markup
+            )
         return
 
     keyboard = nav_keyboard(page, total_pages, pageid)
@@ -60,6 +65,10 @@ async def send_page(
         keyboard.inline_keyboard.extend(reply_markup.inline_keyboard)
 
     if is_edit and isinstance(message, Message):
-        await message.edit_text(chunks[page-1], parse_mode=parse_mode, reply_markup=keyboard)
+        await message.edit_text(
+            chunks[page - 1], parse_mode=parse_mode, reply_markup=keyboard
+        )
     else:
-        await message.answer(chunks[page-1], parse_mode=parse_mode, reply_markup=keyboard)
+        await message.answer(
+            chunks[page - 1], parse_mode=parse_mode, reply_markup=keyboard
+        )

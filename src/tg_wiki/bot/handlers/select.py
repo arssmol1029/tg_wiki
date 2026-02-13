@@ -12,13 +12,14 @@ import tg_wiki.bot.messages as msg
 
 router = Router()
 
+
 # Command format: select:{pageid} or select:{page_num}:{pageid}
 @router.callback_query(lambda c: c.data and c.data.startswith("select:"))
 async def select_callback_handler(callback: CallbackQuery, http: HttpClient) -> None:
     if not callback.data:
         await callback.answer()
         return
-    
+
     data = callback.data.split(":")
 
     page_num = 1
@@ -35,7 +36,7 @@ async def select_callback_handler(callback: CallbackQuery, http: HttpClient) -> 
         return
 
     article = await get_article_by_pageid(http, pageid)
-    
+
     if not callback.message:
         await callback.answer(msg.ERR_MESSAGE_EMPTY)
         return
@@ -43,27 +44,45 @@ async def select_callback_handler(callback: CallbackQuery, http: HttpClient) -> 
     if not article:
         await callback.answer(msg.ERR_NOT_FOUND)
         return
-    
+
     keyboard = next_keyboard()
 
     pageid = article["pageid"]
     full_text = f'<b><a href="{html.escape(article["fullurl"])}">{html.escape(article["title"])}</a></b>\n\n{html.escape(article["extract"])}'
 
-    if is_edit or not (article.get("thumbnail", None) and article["thumbnail"].get("source", None)):
-        await send_page(callback.message, full_text, pageid=pageid, page=page_num, is_edit=is_edit, parse_mode="HTML", reply_markup=keyboard)
+    if is_edit or not (
+        article.get("thumbnail", None) and article["thumbnail"].get("source", None)
+    ):
+        await send_page(
+            callback.message,
+            full_text,
+            pageid=pageid,
+            page=page_num,
+            is_edit=is_edit,
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
         await callback.answer()
         return
 
     if len(full_text) > MAX_MESSAGE_PHOTO_LENGTH:
         await callback.message.answer_photo(photo=article["thumbnail"]["source"])
-        await send_page(callback.message, full_text, pageid=pageid, page=page_num, is_edit=is_edit, parse_mode="HTML", reply_markup=keyboard)
+        await send_page(
+            callback.message,
+            full_text,
+            pageid=pageid,
+            page=page_num,
+            is_edit=is_edit,
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
         await callback.answer()
         return
-    
+
     await callback.message.answer_photo(
         photo=article["thumbnail"]["source"],
         caption=full_text,
         parse_mode="HTML",
-        reply_markup=keyboard
+        reply_markup=keyboard,
     )
     await callback.answer()

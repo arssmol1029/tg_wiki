@@ -115,7 +115,9 @@ class HttpClient:
                         return await resp.json()
                     except aiohttp.ContentTypeError as e:
                         text = await resp.text()
-                        raise HttpRequestError(f"Invalid JSON response: {text[:300]}") from e
+                        raise HttpRequestError(
+                            f"Invalid JSON response: {text[:300]}"
+                        ) from e
 
             except (aiohttp.ClientError, asyncio.TimeoutError, HttpRequestError) as e:
                 last_exc = e
