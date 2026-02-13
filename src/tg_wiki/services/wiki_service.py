@@ -93,7 +93,7 @@ class WikiService:
 
         return article
 
-    async def get_article_by_pageid(self, pageid: str) -> Optional[list]:
+    async def get_article_by_pageid(self, pageid: str) -> Optional[dict]:
         """
         Fetches an article by its pageid from the Ru Wikipedia and checks if it's valid.
 
