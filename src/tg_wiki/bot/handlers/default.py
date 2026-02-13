@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 
 from tg_wiki.services.wiki_service import WikiService
 from tg_wiki.bot.handlers.search import search_handler
+import tg_wiki.bot.messages as msg
 
 router = Router()
 
@@ -15,6 +16,9 @@ async def default_handler(
     if message.quote and message.quote.text:
         await state.clear()
         query = message.quote.text.strip()
+    elif message.text and message.text.strip():
+        await state.clear()
+        query = message.text.strip()
     else:
         return
 
