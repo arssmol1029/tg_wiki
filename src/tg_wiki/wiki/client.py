@@ -59,7 +59,7 @@ async def fetch_by_title(http: HttpClient, titles: list[str]) -> Json:
     return await http.get_json(RUWIKI_API, params=params)
 
 
-async def fetch_by_pageid(http: HttpClient, pageid: str) -> Json:
+async def fetch_by_pageid(http: HttpClient, pageid: list[str]) -> Json:
     """
     Fetches an article by its pageid from the Ru Wikipedia.
 
@@ -73,7 +73,7 @@ async def fetch_by_pageid(http: HttpClient, pageid: str) -> Json:
     params = {
         "action": "query",
         "format": "json",
-        "pageids": pageid,
+        "pageids": "|".join(pageid),
         "prop": "extracts|info|pageimages",
         "exintro": 1,
         "explaintext": 1,
@@ -122,6 +122,7 @@ async def search_by_text(http: HttpClient, query: str, limit: int = 5) -> Json:
     params = {
         "action": "query",
         "format": "json",
+        "prop": "info",
         "list": "search",
         "srsearch": query,
         "srlimit": limit,

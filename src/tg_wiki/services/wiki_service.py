@@ -104,7 +104,7 @@ class WikiService:
             A dictionary containing the article's information, or None if no valid article was found.
         """
         try:
-            data = await wiki.fetch_by_pageid(self.http, pageid)
+            data = await wiki.fetch_by_pageid(self.http, [pageid])
         except (HttpRequestError, HttpNotStartedError):
             return None
 
