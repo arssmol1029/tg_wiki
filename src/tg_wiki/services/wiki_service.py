@@ -150,10 +150,10 @@ class WikiService:
         if not pages_title:
             return []
 
-        results: list[dict[str, str]] = []
+        results: set[dict[str, str]] = set()
         for page in pages_title.values():
             if self.is_valid_article(page):
-                results.append(
+                results.add(
                     {
                         "title": page.get("title", ""),
                         "pageid": str(page.get("pageid", "")),
@@ -162,28 +162,28 @@ class WikiService:
                 )
 
         if len(results) >= limit:
-            return results
+            return list(results)
 
         try:
             data_text = await wiki.search_by_text(
                 self.http, query, limit=limit - len(results)
             )
         except (HttpRequestError, HttpNotStartedError):
-            return results
+            return list(results)
 
         if not isinstance(data_text, dict):
-            return results
+            return list(results)
         pages_text = data_text.get("query", {}).get("pages", {})
         if not pages_text:
-            return results
+            return list(results)
 
         for page in pages_text.values():
             if self.is_valid_article(page):
-                results.append(
+                results.add(
                     {
                         "title": page.get("title", ""),
                         "pageid": str(page.get("pageid", "")),
                         "url": page.get("fullurl", ""),
                     }
                 )
-        return results
+        return list(results)
