@@ -27,6 +27,8 @@ class WikiService:
         Returns:
             True if the article is valid and contains enough information, False otherwise.
         """
+        if not isinstance(article, dict) or not article:
+            return False
         if article.get("missing") is not None:
             return False
         if not article.get("pageid"):
@@ -184,25 +186,14 @@ class WikiService:
         if not isinstance(pages, dict) or not pages:
             return []
 
-        out: list[dict[str, str]] = []
-        for page in pages.values():
-            if not page:
-                continue
-
-            if not self.is_valid_article(page):
-                continue
-
-            pageid = page.get("pageid")
-            url = page.get("fullurl", "")
-            title = page.get("title", "")
-
-            if pageid and url and title:
-                out.append(
-                    {
-                        "title": str(title),
-                        "pageid": str(pageid),
-                        "url": str(url),
-                    }
-                )
+        out: list[dict[str, str]] = [
+            {
+                "title": page.get("title", ""),
+                "pageid": page.get("pageid", ""),
+                "url": page.get("fullurl", ""),
+            }
+            for page in pages.values()
+            if self.is_valid_article(page)
+        ]
 
         return out
