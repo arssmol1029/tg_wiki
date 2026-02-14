@@ -1,6 +1,7 @@
 from aiogram.types import Message, MaybeInaccessibleMessageUnion, InlineKeyboardMarkup
 
 from tg_wiki.bot.keyboards import nav_keyboard
+import tg_wiki.bot.messages as msg
 
 
 MAX_MESSAGE_LENGTH = 1024
@@ -41,11 +42,11 @@ async def send_page(
     total_pages = len(chunks)
 
     if page < 1 or page > total_pages:
-        await message.answer("Ошибка")
+        await message.answer(msg.ERR_BUTTON_STALE))
         return
 
     if not chunks:
-        await message.answer("Ошибка")
+        await message.answer(msg.ERR_NOT_FOUND)
         return
 
     if total_pages == 1:
