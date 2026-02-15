@@ -2,7 +2,7 @@ from aiogram import Router
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
-from tg_wiki.services.wiki_service import WikiService
+from tg_wiki.service.wiki_service import WikiService
 from tg_wiki.domain.article import Article, ArticleMeta
 from tg_wiki.bot.handlers.search import search_handler
 import tg_wiki.bot.messages as msg

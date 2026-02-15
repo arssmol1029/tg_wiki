@@ -5,8 +5,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from dotenv import load_dotenv
 
-from tg_wiki.clients.http import HttpClient
-from tg_wiki.services.wiki_service import WikiService
+from tg_wiki.client.http import HttpClient
+from tg_wiki.service.wiki_service import WikiService
 from tg_wiki.bot.handlers import (
     cancel,
     default,

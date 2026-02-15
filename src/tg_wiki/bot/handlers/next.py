@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, MaybeInaccessibleMessageUnion, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from tg_wiki.services.wiki_service import WikiService
+from tg_wiki.service.wiki_service import WikiService
 from tg_wiki.domain.article import Article, ArticleMeta
 from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
 from tg_wiki.bot.keyboards import next_keyboard

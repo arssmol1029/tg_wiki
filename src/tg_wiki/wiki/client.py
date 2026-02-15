@@ -1,7 +1,7 @@
 from typing import Optional
 from webbrowser import get
 
-from tg_wiki.clients.http import HttpClient, Json
+from tg_wiki.client.http import HttpClient, Json
 
 
 RUWIKI_API = "https://ru.wikipedia.org/w/api.php"
