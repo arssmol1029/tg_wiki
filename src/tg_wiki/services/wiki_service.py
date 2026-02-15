@@ -1,3 +1,4 @@
+from email.mime import image, text
 from typing import Optional
 
 from tg_wiki.clients.http import HttpClient, HttpNotStartedError, HttpRequestError
@@ -15,9 +16,7 @@ class WikiService:
         return self._http
 
     @staticmethod
-    def is_valid_article(
-        article: dict, min_length: int = 0, max_length: int = 10000
-    ) -> bool:
+    def is_valid_article(article: dict, min_length: int = 0) -> bool:
         """
         Filters the raw article data
 
@@ -34,13 +33,6 @@ class WikiService:
         if not article.get("pageid"):
             return False
         if not article.get("title", "").strip():
-            return False
-        extract = article.get("extract", "").strip()
-        if not extract:
-            return False
-        if len(extract) > max_length:
-            return False
-        if len(extract.strip()) < min_length:
             return False
         return True
 
