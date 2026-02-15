@@ -18,7 +18,7 @@
           src = ./.;
           pyproject = true;
           build-system = with py; [ setuptools wheel ];
-          dependencies = with py; [ aiogram python-dotenv aiohttp ];
+          dependencies = with py; [ aiogram python-dotenv aiohttp redis ];
         };
       in {
         packages.default = tg_wiki;
