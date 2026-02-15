@@ -31,8 +31,11 @@ class RecoProvide:
 
         while True:
             article = await self.wiki.get_random_article()
-            if article and article not in last_articles:
-                pageid = article.meta.pageid
+            if not article:
+                continue
+
+            pageid = article.meta.pageid
+            if pageid not in last_articles:
                 await self.cache.user_cache.add(user_id, pageid)
                 await self.cache.article_cache.add(article)
                 return article
