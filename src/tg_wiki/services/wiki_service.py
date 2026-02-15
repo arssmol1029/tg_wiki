@@ -1,4 +1,3 @@
-from email.mime import image, text
 from typing import Optional
 
 from tg_wiki.clients.http import HttpClient, HttpNotStartedError, HttpRequestError
@@ -36,7 +35,9 @@ class WikiService:
             return False
         return True
 
-    async def get_next_article(self, min_length: int = 100) -> Optional[dict]:
+    async def get_next_article(
+        self, min_length: int = 100, text: bool = True, image: bool = True
+    ) -> Optional[dict]:
         """
         Fetches a random article from the Ru Wikipedia and checks if it's valid.
 
@@ -44,7 +45,7 @@ class WikiService:
             A dictionary containing the article's information or None if no valid article was found.
         """
         try:
-            data = await wiki.fetch_random(self.http)
+            data = await wiki.fetch_random(self.http, text=text, image=image)
         except (HttpRequestError, HttpNotStartedError):
             return None
 
@@ -60,7 +61,9 @@ class WikiService:
 
         return article
 
-    async def get_article_by_title(self, title: str) -> Optional[dict]:
+    async def get_article_by_title(
+        self, title: str, text: bool = True, image: bool = True
+    ) -> Optional[dict]:
         """
         Fetches an article by its title from the Ru Wikipedia and checks if it's valid.
 
@@ -71,7 +74,7 @@ class WikiService:
             A dictionary containing the article's information, or None if no valid article was found.
         """
         try:
-            data = await wiki.fetch_by_title(self.http, [title])
+            data = await wiki.fetch_by_title(self.http, [title], text=text, image=image)
         except (HttpRequestError, HttpNotStartedError):
             return None
 
@@ -87,7 +90,9 @@ class WikiService:
 
         return article
 
-    async def get_article_by_pageid(self, pageid: str) -> Optional[dict]:
+    async def get_article_by_pageid(
+        self, pageid: str, text: bool = True, image: bool = True
+    ) -> Optional[dict]:
         """
         Fetches an article by its pageid from the Ru Wikipedia and checks if it's valid.
 
@@ -98,7 +103,9 @@ class WikiService:
             A dictionary containing the article's information, or None if no valid article was found.
         """
         try:
-            data = await wiki.fetch_by_pageid(self.http, [pageid])
+            data = await wiki.fetch_by_pageid(
+                self.http, [pageid], text=text, image=image
+            )
         except (HttpRequestError, HttpNotStartedError):
             return None
 

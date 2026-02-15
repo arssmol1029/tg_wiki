@@ -8,7 +8,7 @@ RUWIKI_API = "https://ru.wikipedia.org/w/api.php"
 IMAGE_WIDTH = 300
 
 
-async def fetch_random(http: HttpClient) -> Json:
+async def fetch_random(http: HttpClient, text: bool = True, image: bool = True) -> Json:
     """
     Fetches a random article from the Ru Wikipedia.
 
@@ -18,13 +18,19 @@ async def fetch_random(http: HttpClient) -> Json:
     Returns:
         A Json containing the article's information.
     """
+    props = ["info"]
+    if text:
+        props.append("extracts")
+    if image:
+        props.append("pageimages")
+
     params = {
         "action": "query",
         "format": "json",
         "generator": "random",
         "grnlimit": 1,
         "grnnamespace": 0,
-        "prop": "extracts|info|pageimages",
+        "prop": "|".join(props),
         "exintro": 1,
         "explaintext": 1,
         "inprop": "url",
@@ -34,7 +40,9 @@ async def fetch_random(http: HttpClient) -> Json:
     return await http.get_json(RUWIKI_API, params=params)
 
 
-async def fetch_by_title(http: HttpClient, titles: list[str]) -> Json:
+async def fetch_by_title(
+    http: HttpClient, titles: list[str], text: bool = True, image: bool = True
+) -> Json:
     """
     Fetches an article by its title from the Ru Wikipedia.
 
@@ -45,11 +53,17 @@ async def fetch_by_title(http: HttpClient, titles: list[str]) -> Json:
     Returns:
         A Json containing the article's information.
     """
+    props = ["info"]
+    if text:
+        props.append("extracts")
+    if image:
+        props.append("pageimages")
+
     params = {
         "action": "query",
         "format": "json",
         "titles": "|".join(titles),
-        "prop": "extracts|info|pageimages",
+        "prop": "|".join(props),
         "exintro": 1,
         "explaintext": 1,
         "inprop": "url",
@@ -59,7 +73,9 @@ async def fetch_by_title(http: HttpClient, titles: list[str]) -> Json:
     return await http.get_json(RUWIKI_API, params=params)
 
 
-async def fetch_by_pageid(http: HttpClient, pageid: list[str]) -> Json:
+async def fetch_by_pageid(
+    http: HttpClient, pageid: list[str], text: bool = True, image: bool = True
+) -> Json:
     """
     Fetches an article by its pageid from the Ru Wikipedia.
 
@@ -70,11 +86,17 @@ async def fetch_by_pageid(http: HttpClient, pageid: list[str]) -> Json:
     Returns:
         A Json containing the article's information.
     """
+    props = ["info"]
+    if text:
+        props.append("extracts")
+    if image:
+        props.append("pageimages")
+
     params = {
         "action": "query",
         "format": "json",
         "pageids": "|".join(pageid),
-        "prop": "extracts|info|pageimages",
+        "prop": "|".join(props),
         "exintro": 1,
         "explaintext": 1,
         "inprop": "url",
