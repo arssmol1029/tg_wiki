@@ -42,7 +42,7 @@ async def send_page(
     total_pages = len(chunks)
 
     if page < 1 or page > total_pages:
-        await message.answer(msg.ERR_BUTTON_STALE))
+        await message.answer(msg.ERR_BUTTON_STALE)
         return
 
     if not chunks:
