@@ -48,12 +48,15 @@ async def select_callback_handler(
 
     keyboard = next_keyboard()
 
-    pageid = article["pageid"]
-    full_text = f'<b><a href="{html.escape(article["fullurl"])}">{html.escape(article["title"])}</a></b>\n\n{html.escape(article["extract"])}'
+    pageid = article.meta.pageid
+    full_text = (
+        f'<b><a href="{html.escape(article.meta.url)}">{html.escape(article.meta.title)}</a></b>'
+        + f"\n\n{html.escape(article.extract)}"
+        if article.extract
+        else ""
+    )
 
-    if is_edit or not (
-        article.get("thumbnail", None) and article["thumbnail"].get("source", None)
-    ):
+    if is_edit or not (article.meta.thumbnail_url):
         await send_page(
             callback.message,
             full_text,
@@ -67,7 +70,7 @@ async def select_callback_handler(
         return
 
     if len(full_text) > MAX_MESSAGE_PHOTO_LENGTH:
-        await callback.message.answer_photo(photo=article["thumbnail"]["source"])
+        await callback.message.answer_photo(photo=article.meta.thumbnail_url)
         await send_page(
             callback.message,
             full_text,
@@ -81,7 +84,7 @@ async def select_callback_handler(
         return
 
     await callback.message.answer_photo(
-        photo=article["thumbnail"]["source"],
+        photo=article.meta.thumbnail_url,
         caption=full_text,
         parse_mode="HTML",
         reply_markup=keyboard,

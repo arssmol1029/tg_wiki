@@ -1,6 +1,7 @@
 from typing import Optional
 
 from tg_wiki.clients.http import HttpClient, HttpNotStartedError, HttpRequestError
+from tg_wiki.domain.article import Article, ArticleMeta
 import tg_wiki.wiki.client as wiki
 
 
@@ -15,7 +16,52 @@ class WikiService:
         return self._http
 
     @staticmethod
-    def is_valid_article(article: dict, min_length: int = 0) -> bool:
+    def _to_article_meta(raw: dict) -> ArticleMeta:
+        """
+        Converts the raw article data from the Wikipedia API into an ArticleMeta object.
+
+        Args:
+            raw: The raw data of the article as returned by the Wikipedia API.
+
+        Returns:
+            An ArticleMeta object containing the article's metadata.
+        """
+        pageid = int(raw["pageid"])
+        title = str(raw.get("title", "")).strip()
+        fullurl = str(raw.get("fullurl", "")).strip()
+
+        thumb = raw.get("thumbnail")
+        thumbnail_url = None
+        if isinstance(thumb, dict):
+            thumbnail_url = thumb.get("source")
+
+        return ArticleMeta(
+            pageid=int(pageid),
+            title=title,
+            url=fullurl,
+            thumbnail_url=thumbnail_url,
+        )
+
+    @staticmethod
+    def _to_article(raw: dict, lang: str = "ru") -> Article:
+        """
+        Converts the raw article data from the Wikipedia API into an Article object.
+
+        Args:
+            raw: The raw data of the article as returned by the Wikipedia API.
+
+        Returns:
+            An Article object containing the article's information.
+        """
+        meta = WikiService._to_article_meta(raw)
+        extract = str(raw.get("extract", "")).strip()
+
+        return Article(meta=meta, extract=extract, lang=lang)
+
+    @staticmethod
+    def _is_valid_article(
+        article: dict, min_length: int = 0, *, text_required: bool = True
+    ) -> bool:
         """
         Filters the raw article data
 
@@ -31,13 +77,19 @@ class WikiService:
             return False
         if not article.get("pageid"):
             return False
-        if not article.get("title", "").strip():
+        if not str(article.get("title", "")).strip():
             return False
+        if not str(article.get("fullurl", "")).strip():
+            return False
+        if text_required:
+            extract = str(article.get("extract", "")).strip()
+            if len(extract) < min_length:
+                return False
         return True
 
-    async def get_next_article(
-        self, min_length: int = 100, text: bool = True, image: bool = True
-    ) -> Optional[dict]:
+    async def get_random_article(
+        self, min_length: int = 100, *, text: bool = True, image: bool = True
+    ) -> Optional[Article]:
         """
         Fetches a random article from the Ru Wikipedia and checks if it's valid.
 
@@ -56,14 +108,16 @@ class WikiService:
             return None
 
         article = next(iter(pages.values()))
-        if not self.is_valid_article(article, min_length=min_length):
+        if not self._is_valid_article(
+            article, min_length=min_length, text_required=text
+        ):
             return None
 
-        return article
+        return self._to_article(article)
 
     async def get_article_by_title(
-        self, title: str, text: bool = True, image: bool = True
-    ) -> Optional[dict]:
+        self, title: str, *, text: bool = True, image: bool = True
+    ) -> Optional[Article]:
         """
         Fetches an article by its title from the Ru Wikipedia and checks if it's valid.
 
@@ -85,14 +139,14 @@ class WikiService:
             return None
 
         article = next(iter(pages.values()))
-        if not self.is_valid_article(article):
+        if not self._is_valid_article(article, text_required=text):
             return None
 
-        return article
+        return self._to_article(article)
 
     async def get_article_by_pageid(
-        self, pageid: str, text: bool = True, image: bool = True
-    ) -> Optional[dict]:
+        self, pageid: str, *, text: bool = True, image: bool = True
+    ) -> Optional[Article]:
         """
         Fetches an article by its pageid from the Ru Wikipedia and checks if it's valid.
 
@@ -116,12 +170,12 @@ class WikiService:
             return None
 
         article = next(iter(pages.values()))
-        if not self.is_valid_article(article):
+        if not self._is_valid_article(article, text_required=text):
             return None
 
-        return article
+        return self._to_article(article)
 
-    async def search_articles(self, query: str, limit: int = 5) -> list[dict[str, str]]:
+    async def search_articles(self, query: str, *, limit: int = 5) -> list[ArticleMeta]:
         """
         Searches for articles by query on the Ru Wikipedia.
 
@@ -185,14 +239,10 @@ class WikiService:
         if not isinstance(pages, dict) or not pages:
             return []
 
-        out: list[dict[str, str]] = [
-            {
-                "title": page.get("title", ""),
-                "pageid": page.get("pageid", ""),
-                "url": page.get("fullurl", ""),
-            }
+        out: list[ArticleMeta] = [
+            self._to_article_meta(page)
             for page in pages.values()
-            if self.is_valid_article(page)
+            if self._is_valid_article(page, text_required=False)
         ]
 
         return out

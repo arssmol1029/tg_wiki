@@ -6,6 +6,7 @@ from aiogram.types import Message, MaybeInaccessibleMessageUnion, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
 from tg_wiki.services.wiki_service import WikiService
+from tg_wiki.domain.article import Article, ArticleMeta
 from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
 from tg_wiki.bot.keyboards import next_keyboard
 import tg_wiki.bot.messages as msg
@@ -17,33 +18,36 @@ router = Router()
 async def next_handler(
     message: Message | MaybeInaccessibleMessageUnion, wiki_service: WikiService
 ) -> None:
-    article = await wiki_service.get_next_article()
+    article = await wiki_service.get_random_article()
     if not article:
         await message.answer(msg.ERR_NETWORK)
         return
 
     keyboard = next_keyboard()
 
-    pageid = article["pageid"]
-    full_text = f'<b><a href="{html.escape(article["fullurl"])}">{html.escape(article["title"])}</a></b>\n\n{html.escape(article["extract"])}'
+    pageid = article.meta.pageid
+    full_text = (
+        f'<b><a href="{html.escape(article.meta.url)}">{html.escape(article.meta.title)}</a></b>'
+        + f"\n\n{html.escape(article.extract)}"
+        if article.extract
+        else ""
+    )
 
-    if not (
-        article.get("thumbnail", None) and article["thumbnail"].get("source", None)
-    ):
+    if not (article.meta.thumbnail_url):
         await send_page(
             message, full_text, pageid=pageid, parse_mode="HTML", reply_markup=keyboard
         )
         return
 
     if len(full_text) > MAX_MESSAGE_PHOTO_LENGTH:
-        await message.answer_photo(photo=article["thumbnail"]["source"])
+        await message.answer_photo(photo=article.meta.thumbnail_url)
         await send_page(
             message, full_text, pageid=pageid, parse_mode="HTML", reply_markup=keyboard
         )
         return
 
     await message.answer_photo(
-        photo=article["thumbnail"]["source"],
+        photo=article.meta.thumbnail_url,
         caption=full_text,
         parse_mode="HTML",
         reply_markup=keyboard,

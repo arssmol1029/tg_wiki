@@ -1,5 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from tg_wiki.domain.article import ArticleMeta
+
 
 def next_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
@@ -39,16 +41,16 @@ def nav_keyboard(page: int, total_pages: int, pageid: int) -> InlineKeyboardMark
     return keyboard
 
 
-def search_results_keyboard(results: list[dict[str, str]]) -> InlineKeyboardMarkup:
+def search_results_keyboard(results: list[ArticleMeta]) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=result["title"], callback_data=f"select:{result['pageid']}"
+                    text=result.title, callback_data=f"select:{result.pageid}"
                 )
             ]
             for result in results
-            if result.get("title", None) and result.get("pageid", None)
+            if result.title and result.pageid
         ]
     )
     return keyboard
