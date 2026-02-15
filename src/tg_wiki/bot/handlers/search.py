@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, MaybeInaccessibleMessageUnion
 from aiogram.fsm.context import FSMContext
 
-from tg_wiki.service.wiki_service import WikiService
+from tg_wiki.provider.search import SearchProvide
 from tg_wiki.bot.states import SearchState
 from tg_wiki.bot.keyboards import search_results_keyboard
 import tg_wiki.bot.messages as msg
@@ -15,9 +15,9 @@ router = Router()
 async def search_handler(
     message: Message | MaybeInaccessibleMessageUnion,
     query: str,
-    wiki_service: WikiService,
+    search: SearchProvide,
 ) -> None:
-    results = await wiki_service.search_articles(query)
+    results = await search.search_articles(query)
 
     if not results:
         await message.answer(msg.ERR_NOT_FOUND)
@@ -30,7 +30,7 @@ async def search_handler(
 
 @router.message(Command("search"))
 async def search_message_handler(
-    message: Message, wiki_service: WikiService, state: FSMContext
+    message: Message, search: SearchProvide, state: FSMContext
 ) -> None:
     await state.clear()
     if not message.text:
@@ -48,17 +48,17 @@ async def search_message_handler(
             await message.answer(msg.MSG_ENTER_QUERY)
             await state.set_state(SearchState.waiting_for_query)
     else:
-        await search_handler(message, query, wiki_service)
+        await search_handler(message, query, search)
 
 
 @router.message(SearchState.waiting_for_query)
 async def process_search_query(
-    message: Message, wiki_service: WikiService, state: FSMContext
+    message: Message, search: SearchProvide, state: FSMContext
 ) -> None:
     if not message.text or not message.text.strip():
         await message.answer(msg.ERR_BAD_INPUT)
         return
     query = message.text.strip()
 
-    await search_handler(message, query, wiki_service)
+    await search_handler(message, query, search)
     await state.clear()

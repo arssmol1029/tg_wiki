@@ -1,4 +1,10 @@
-from aiogram.types import Message, MaybeInaccessibleMessageUnion, InlineKeyboardMarkup
+from aiogram.types import (
+    Message,
+    CallbackQuery,
+    MaybeInaccessibleMessageUnion,
+    InlineKeyboardMarkup,
+)
+from typing import Optional, Union
 
 from tg_wiki.bot.keyboards import nav_keyboard
 import tg_wiki.bot.messages as msg
@@ -6,6 +12,16 @@ import tg_wiki.bot.messages as msg
 
 MAX_MESSAGE_LENGTH = 1024
 MAX_MESSAGE_PHOTO_LENGTH = 1024
+
+
+Event = Union[Message, CallbackQuery]
+
+
+def get_user_id(event: Event) -> Optional[int]:
+    if isinstance(event, Message):
+        return event.from_user.id if event.from_user else None
+
+    return event.from_user.id if event.from_user else None
 
 
 def split_text_pages(text: str, max_len: int = MAX_MESSAGE_LENGTH) -> list[str]:

@@ -7,6 +7,11 @@ from dotenv import load_dotenv
 
 from tg_wiki.client.http import HttpClient
 from tg_wiki.service.wiki_service import WikiService
+from tg_wiki.cache.ports import Cache
+from tg_wiki.cache.in_memory.users import InMemoryUserCache
+from tg_wiki.cache.in_memory.articles import InMemoryArticleCache
+from tg_wiki.provider.reco import RecoProvide
+from tg_wiki.provider.search import SearchProvide
 from tg_wiki.bot.handlers import (
     cancel,
     default,
@@ -22,14 +27,19 @@ from tg_wiki.bot.handlers import (
 async def main() -> None:
     load_dotenv()
 
-    bot = Bot(token=os.environ["BOT_TOKEN"])
-    dp = Dispatcher()
-    http = HttpClient()
-
     try:
+        bot = Bot(token=os.environ["BOT_TOKEN"])
+        dp = Dispatcher()
+
+        http = HttpClient()
         await http.start()
+
         wiki_service = WikiService(http)
-        dp.workflow_data["wiki_service"] = wiki_service
+        cache = Cache(InMemoryUserCache(), InMemoryArticleCache())
+        reco_provider = RecoProvide(wiki_service, cache)
+        search_provider = SearchProvide(wiki_service, cache)
+        dp.workflow_data["reco"] = reco_provider
+        dp.workflow_data["search"] = search_provider
 
         dp.include_router(cancel.router)
         dp.include_router(start.router)

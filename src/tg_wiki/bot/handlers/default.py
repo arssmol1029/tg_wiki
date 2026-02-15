@@ -2,17 +2,16 @@ from aiogram import Router
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
-from tg_wiki.service.wiki_service import WikiService
-from tg_wiki.domain.article import Article, ArticleMeta
+from tg_wiki.provider.search import SearchProvide
 from tg_wiki.bot.handlers.search import search_handler
-import tg_wiki.bot.messages as msg
+
 
 router = Router()
 
 
 @router.message()
 async def default_handler(
-    message: Message, wiki_service: WikiService, state: FSMContext
+    message: Message, search: SearchProvide, state: FSMContext
 ) -> None:
     if message.quote and message.quote.text:
         await state.clear()
@@ -23,4 +22,4 @@ async def default_handler(
     else:
         return
 
-    await search_handler(message, query, wiki_service)
+    await search_handler(message, query, search)

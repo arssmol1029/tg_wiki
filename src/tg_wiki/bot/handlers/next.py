@@ -5,9 +5,8 @@ from aiogram.filters import Command
 from aiogram.types import Message, MaybeInaccessibleMessageUnion, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from tg_wiki.service.wiki_service import WikiService
-from tg_wiki.domain.article import Article, ArticleMeta
-from tg_wiki.bot.utility import send_page, MAX_MESSAGE_PHOTO_LENGTH
+from tg_wiki.provider.reco import RecoProvide
+from tg_wiki.bot.utility import get_user_id, send_page, MAX_MESSAGE_PHOTO_LENGTH
 from tg_wiki.bot.keyboards import next_keyboard
 import tg_wiki.bot.messages as msg
 
@@ -16,9 +15,9 @@ router = Router()
 
 
 async def next_handler(
-    message: Message | MaybeInaccessibleMessageUnion, wiki_service: WikiService
+    message: Message | MaybeInaccessibleMessageUnion, user_id: int, reco: RecoProvide
 ) -> None:
-    article = await wiki_service.get_random_article()
+    article = await reco.get_next_arcticle(user_id)
     if not article:
         await message.answer(msg.ERR_NETWORK)
         return
@@ -56,20 +55,31 @@ async def next_handler(
 
 @router.message(Command("next"))
 async def next_message_handler(
-    message: Message, wiki_service: WikiService, state: FSMContext
+    message: Message, reco: RecoProvide, state: FSMContext
 ) -> None:
     await state.clear()
-    await next_handler(message, wiki_service)
+
+    user_id = get_user_id(message)
+    if not user_id:
+        await message.answer(msg.ERR_NO_USERID)
+        return
+
+    await next_handler(message, user_id, reco)
 
 
 @router.callback_query(lambda c: c.data and c.data == "next")
 async def next_callback_handler(
-    callback: CallbackQuery, wiki_service: WikiService, state: FSMContext
+    callback: CallbackQuery, reco: RecoProvide, state: FSMContext
 ) -> None:
     await state.clear()
     if not callback.message:
-        await callback.answer(msg.ERR_MESSAGE_EMPTY)
+        await callback.answer()
         return
 
-    await next_handler(callback.message, wiki_service)
+    user_id = get_user_id(callback)
+    if not user_id:
+        await callback.answer(msg.ERR_NO_USERID)
+        return
+
+    await next_handler(callback.message, user_id, reco)
     await callback.answer()
