@@ -145,7 +145,7 @@ class WikiService:
         return self._to_article(article)
 
     async def get_article_by_pageid(
-        self, pageid: str, *, text: bool = True, image: bool = True
+        self, pageid: int, *, text: bool = True, image: bool = True
     ) -> Optional[Article]:
         """
         Fetches an article by its pageid from the Ru Wikipedia and checks if it's valid.
@@ -158,7 +158,7 @@ class WikiService:
         """
         try:
             data = await wiki.fetch_by_pageid(
-                self.http, [pageid], text=text, image=image
+                self.http, [str(pageid)], text=text, image=image
             )
         except (HttpRequestError, HttpNotStartedError):
             return None
