@@ -1,4 +1,4 @@
-from tg_wiki.service.wiki_service import WikiService
+from tg_wiki.wiki_service.wiki import WikiService
 from tg_wiki.domain.article import Article
 from tg_wiki.cache.ports import Cache
 

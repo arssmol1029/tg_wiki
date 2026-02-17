@@ -2,7 +2,7 @@ from typing import Optional
 
 from tg_wiki.client.http import HttpClient, HttpNotStartedError, HttpRequestError
 from tg_wiki.domain.article import Article, ArticleMeta
-import tg_wiki.wiki.client as wiki
+import tg_wiki.wiki_service.client as wiki
 
 
 class WikiService:

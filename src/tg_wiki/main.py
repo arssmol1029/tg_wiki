@@ -8,7 +8,7 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 from dotenv import load_dotenv
 
 from tg_wiki.client.http import HttpClient
-from tg_wiki.service.wiki_service import WikiService
+from tg_wiki.wiki_service.wiki import WikiService
 
 from tg_wiki.cache.ports import Cache
 from tg_wiki.cache.in_memory.users import InMemoryUserCache
