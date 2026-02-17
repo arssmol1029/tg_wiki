@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, MaybeInaccessibleMessageUnion
 from aiogram.fsm.context import FSMContext
 
-from tg_wiki.provider.search import SearchProvide
+from tg_wiki.search_service.search import SearchProvide
 from tg_wiki.bot.states import SearchState
 from tg_wiki.bot.keyboards import search_results_keyboard
 import tg_wiki.bot.messages as msg

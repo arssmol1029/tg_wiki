@@ -3,7 +3,7 @@ import html
 from aiogram import Router
 from aiogram.types import CallbackQuery
 
-from tg_wiki.provider.search import SearchProvide
+from tg_wiki.search_service.search import SearchProvide
 from tg_wiki.bot.utility import get_user_id, send_page, MAX_MESSAGE_PHOTO_LENGTH
 from tg_wiki.bot.keyboards import next_keyboard
 import tg_wiki.bot.messages as msg

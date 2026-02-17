@@ -16,8 +16,8 @@ from tg_wiki.cache.in_memory.articles import InMemoryArticleCache
 from tg_wiki.cache.redis.users import RedisUserCache
 from tg_wiki.cache.redis.articles import RedisArticleCache
 
-from tg_wiki.provider.reco import RecoProvide
-from tg_wiki.provider.search import SearchProvide
+from tg_wiki.reco_service.reco import RecoProvide
+from tg_wiki.search_service.search import SearchProvide
 
 from tg_wiki.bot.handlers import (
     cancel,

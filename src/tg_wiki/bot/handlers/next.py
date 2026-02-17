@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, MaybeInaccessibleMessageUnion, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from tg_wiki.provider.reco import RecoProvide
+from tg_wiki.reco_service.reco import RecoProvide
 from tg_wiki.bot.utility import get_user_id, send_page, MAX_MESSAGE_PHOTO_LENGTH
 from tg_wiki.bot.keyboards import next_keyboard
 import tg_wiki.bot.messages as msg
