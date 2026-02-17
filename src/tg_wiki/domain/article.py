@@ -23,7 +23,7 @@ class Article:
 
 @dataclass(frozen=True, slots=True)
 class ArticleEmbedding:
-    article_id: int
+    pageid: int
     vector: list[float]
     model: Optional[str] = None
 
