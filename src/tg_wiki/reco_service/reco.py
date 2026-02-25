@@ -1,22 +1,27 @@
+import asyncio
+
+from dataclasses import dataclass
+
 from tg_wiki.wiki_service.wiki import WikiService
 from tg_wiki.domain.article import Article
 from tg_wiki.cache.ports import Cache
 
 
-class RecoProvide:
-    def __init__(self, wiki: WikiService, cache: Cache):
-        self._wiki = wiki
-        self._cache = cache
+@dataclass
+class RecoService:
+
+    _wiki: WikiService
+    _cache: Cache
 
     @property
-    def wiki(self):
+    def wiki(self) -> WikiService:
         return self._wiki
 
     @property
-    def cache(self):
+    def cache(self) -> Cache:
         return self._cache
 
-    async def get_next_arcticle(self, user_id: int) -> Article:
+    async def get_next_article(self, user_id: int) -> Article:
         """
         Retrieve the next article for a user, utilizing cache for performance.
 
@@ -26,16 +31,18 @@ class RecoProvide:
         Returns:
             A randomly selected article that is not in the user's recent history.
         """
-
-        last_articles = await self.cache.user_cache.get(user_id)
+        last_articles = await self.cache.last_view.get(user_id) or ()
 
         while True:
             article = await self.wiki.get_random_article()
-            if not article:
+            if not article or not article.meta:
                 continue
 
             pageid = article.meta.pageid
+            if not pageid:
+                continue
+
             if pageid not in last_articles:
-                await self.cache.user_cache.add(user_id, pageid)
-                await self.cache.article_cache.add(article)
+                await self.cache.last_view.update(user_id, pageid)
+                asyncio.create_task(self.cache.articles.update(article))
                 return article

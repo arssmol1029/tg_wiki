@@ -3,6 +3,7 @@
 *.egg-info/
 __pycache__/
 *.pyc
+.vscode
 
 # This file is needed to use pip on nixos
 default.nix

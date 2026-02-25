@@ -1,4 +1,4 @@
-class RedisUserCache:
+class RedisLastViewCache:
     def __init__(
         self,
         redis,
@@ -32,7 +32,7 @@ class RedisUserCache:
                 continue
         return out
 
-    async def add(self, user_id: int, pageid: int) -> None:
+    async def update(self, user_id: int, pageid: int) -> None:
         key = self._key(user_id)
 
         pipe = self._r.pipeline(transaction=True)

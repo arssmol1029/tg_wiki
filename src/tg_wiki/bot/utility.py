@@ -6,6 +6,7 @@ from aiogram.types import (
 )
 from typing import Optional, Union
 
+from tg_wiki.settings_service.user_settings import UserSettingsService
 from tg_wiki.bot.keyboards import nav_keyboard
 import tg_wiki.bot.messages as msg
 
@@ -18,18 +19,32 @@ Event = Union[Message, CallbackQuery]
 
 
 def get_user_id(event: Event) -> Optional[int]:
-    if isinstance(event, Message):
-        return event.from_user.id if event.from_user else None
-
     return event.from_user.id if event.from_user else None
 
 
-def split_text_pages(text: str, max_len: int = MAX_MESSAGE_LENGTH) -> list[str]:
+async def ensure_user(
+    event: Event, settings_service: UserSettingsService
+) -> Optional[int]:
+    user = event.from_user
+    if not user:
+        return None
+
+    return await settings_service.ensure_telegram_user(
+        user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        language_code=user.language_code,
+        update_user=True,
+    )
+
+
+def split_text_pages(text: str, page_len: int = MAX_MESSAGE_LENGTH) -> list[str]:
     chunks: list[str] = []
     remaining = text
 
-    while len(remaining) > max_len:
-        part = remaining[:max_len]
+    while len(remaining) > page_len:
+        part = remaining[:page_len]
 
         last_space = part.rfind(" ")
         if last_space > 0:
@@ -48,13 +63,14 @@ async def send_page(
     message: Message | MaybeInaccessibleMessageUnion,
     text: str,
     pageid: int,
+    *,
     page: int = 1,
     is_edit: bool = False,
     parse_mode: str = "HTML",
     reply_markup: InlineKeyboardMarkup | None = None,
-    max_len: int = MAX_MESSAGE_LENGTH,
+    page_len: int = MAX_MESSAGE_LENGTH,
 ) -> None:
-    chunks = split_text_pages(text, max_len)
+    chunks = split_text_pages(text, page_len)
     total_pages = len(chunks)
 
     if page < 1 or page > total_pages:
@@ -76,7 +92,7 @@ async def send_page(
             )
         return
 
-    keyboard = nav_keyboard(page, total_pages, pageid)
+    keyboard = nav_keyboard(page, total_pages, pageid, page_len)
 
     if reply_markup:
         keyboard.inline_keyboard.extend(reply_markup.inline_keyboard)

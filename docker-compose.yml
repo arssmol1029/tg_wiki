@@ -1,0 +1,58 @@
+services:
+  db:
+    image: pgvector/pgvector:0.8.0-pg16-bookworm
+    environment:
+      POSTGRES_DB: tg_wiki
+      POSTGRES_USER: tg_wiki
+      POSTGRES_PASSWORD: tg_wiki
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tg_wiki -d tg_wiki"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:8.2.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "6379:6379"
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DB_DSN: postgresql+asyncpg://tg_wiki:tg_wiki@db:5432/tg_wiki
+
+      CACHE_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+      REDIS_PREFIX: tg_wiki
+
+      REDIS_ARTICLE_TTL_S: "86400"
+      REDIS_MAX_PER_USER: "100"
+      REDIS_LASTVIEW_TTL_S: "604800"
+      REDIS_SETTINGS_TTL_S: "86400"
+      REDIS_USERID_TTL_S: "86400"
+
+    command: ["sh", "-lc", "alembic upgrade head && tg-wiki"]
+
+volumes:
+  pgdata:
+  redisdata:

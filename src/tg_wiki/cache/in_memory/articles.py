@@ -18,7 +18,7 @@ class InMemoryArticleCache:
         self._lru.move_to_end(pageid)
         return item
 
-    async def add(self, article: Article) -> None:
+    async def update(self, article: Article) -> None:
         self._lru[article.meta.pageid] = article
         self._lru.move_to_end(article.meta.pageid)
         while len(self._lru) > self._max_articles:

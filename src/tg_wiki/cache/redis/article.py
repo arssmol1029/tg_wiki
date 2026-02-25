@@ -25,7 +25,7 @@ class RedisArticleCache:
             raw = raw.decode("utf-8")
         return loads_article(raw)
 
-    async def add(self, article: Article) -> None:
+    async def update(self, article: Article) -> None:
         key = self._key(article, lang=article.lang)
         val = dumps_article(article)
         await self._r.set(key, val, ex=self._ttl)

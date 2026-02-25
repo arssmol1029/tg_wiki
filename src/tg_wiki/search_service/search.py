@@ -1,3 +1,6 @@
+import asyncio
+
+from dataclasses import dataclass
 from typing import Optional
 
 from tg_wiki.wiki_service.wiki import WikiService
@@ -5,17 +8,18 @@ from tg_wiki.domain.article import Article, ArticleMeta
 from tg_wiki.cache.ports import Cache
 
 
-class SearchProvide:
-    def __init__(self, wiki: WikiService, cache: Cache):
-        self._wiki = wiki
-        self._cache = cache
+@dataclass
+class SearchService:
+
+    _wiki: WikiService
+    _cache: Cache
 
     @property
-    def wiki(self):
+    def wiki(self) -> WikiService:
         return self._wiki
 
     @property
-    def cache(self):
+    def cache(self) -> Cache:
         return self._cache
 
     async def search_articles(self, query: str, *, limit: int = 5) -> list[ArticleMeta]:
@@ -45,7 +49,7 @@ class SearchProvide:
         Returns:
             The Article object if found, otherwise None.
         """
-        article = await self.cache.article_cache.get(pageid)
+        article = await self.cache.articles.get(pageid)
         if article:
             return article
 
@@ -53,6 +57,8 @@ class SearchProvide:
         if not article:
             return None
 
-        await self.cache.article_cache.add(article)
-        await self.cache.user_cache.add(user_id, pageid)
+        await asyncio.gather(
+            self.cache.articles.update(article),
+            self.cache.last_view.update(user_id, pageid),
+        )
         return article
