@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package myorg.wiki.v1;
+
+// - INVALID_ARGUMENT: некорректные параметры
+// - RESOURCE_EXHAUSTED: превышены лимиты
+// - UNAVAILABLE: внешнее API недоступно / сетевые проблемы
+// - DEADLINE_EXCEEDED: не уложились в deadline клиента
+// - NOT_FOUND: объект не найден через внешнее API
+
+// Сервис предоставляет доступ к статьям из википедии, используя внешнее API
+service WikiService {
+    // Возвращает случайную статью.
+    //
+    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED
+    rpc GetRandomArticle(GetRandomArticleRequest) returns (GetArticleResponse);
+
+    // Возвращает статью по её названию (требуется точное соответствие).
+    //
+    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND
+    rpc GetArticleByTitle(GetArticleByTitleRequest) returns (GetArticleResponse);
+
+    // Возвращает статью по её ID.
+    //
+    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND
+    rpc GetArticleByPageId(GetArticleByPageIdRequest) returns (GetArticleResponse);
+
+    // Поиск статей по строке запроса и возвращает метаданные (title + pageid).
+    //
+    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND
+    rpc SearchArticles(SearchArticlesRequest) returns (SearchArticlesResponse);
+}
+
+message ArticleMeta {
+    int64 pageid = 1;
+    string title = 2;
+    string url = 3;
+    string thumbnail_url = 4;
+}
+
+message Article {
+    ArticleMeta meta = 1;
+    string extract = 2;
+    string lang = 3;
+}
+
+message GetRandomArticleRequest {
+    int32 min_length = 1;
+    bool text = 2;
+    bool image = 3;
+    string lang = 4;
+}
+
+message GetArticleByTitleRequest {
+    string title = 1;
+    bool text = 2;
+    bool image = 3;
+    string lang = 4;
+}
+
+message GetArticleByPageIdRequest {
+    int64 pageid = 1;
+    bool text = 2;
+    bool image = 3;
+    string lang = 4;
+}
+
+message GetArticleResponse {
+    Article article = 1;
+    bool found = 2;
+}
+
+message SearchArticlesRequest {
+    string query = 1;
+    int32 limit = 2;
+    string lang = 3;
+}
+
+message SearchArticlesResponse {
+    repeated ArticleMeta items = 1;
+}
