@@ -1,35 +1,21 @@
 {
-  description = "tg_wiki – Telegram Wiki Bot";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
-    flake-utils.url = "github:numtide/flake-utils";
-  };
+  outputs = { self, nixpkgs }:
+    let
+      supportedSystems =
+        [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
+      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+    in {
+      devShells = forAllSystems (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
 
-  outputs = { self, nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs { inherit system; };
-        py = pkgs.python3Packages;
-
-        tg_wiki = py.buildPythonPackage {
-          pname = "tg_wiki";
-          version = "0.1.0";
-          src = ./.;
-          pyproject = true;
-          build-system = with py; [ setuptools wheel ];
-          dependencies = with py; [ aiogram python-dotenv aiohttp redis sqlalchemy asyncpg alembic pgvector ];
-        };
-      in {
-        packages.default = tg_wiki;
-
-        devShells.default = pkgs.mkShell {
-          packages = [ tg_wiki pkgs.nixpkgs-fmt ];
-          shellHook = ''
-            if [ -f .env ]; then
-              export BOT_TOKEN=$(grep BOT_TOKEN .env | cut -d '=' -f2)
-            fi
-          '';
-        };
-      });
+          py = pkgs.python312.withPackages
+            (ps: with ps; [ grpcio-tools grpcio protobuf pip ]);
+        in {
+          default =
+            pkgs.mkShellNoCC { packages = [ py pkgs.stdenv.cc.cc.lib ]; };
+        });
+    };
 }
