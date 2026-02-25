@@ -11,6 +11,8 @@ dependencies = [
   "asyncpg>=0.29",
   "alembic>=1.13",
   "pgvector>=0.3.5",
+  "grpcio>=1.78",
+  "grpcio-tools>=1.78",
 ]
 
 [build-system]
