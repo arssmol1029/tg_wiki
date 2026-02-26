@@ -13,9 +13,14 @@
 
           py = pkgs.python312.withPackages
             (ps: with ps; [ grpcio-tools grpcio protobuf pip ]);
+
+          runtimeLibs = [ pkgs.stdenv.cc.cc.lib ];
         in {
-          default =
-            pkgs.mkShellNoCC { packages = [ py pkgs.stdenv.cc.cc.lib ]; };
+          default = pkgs.mkShellNoCC {
+            packages = [ py ] ++ runtimeLibs;
+
+            LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath runtimeLibs;
+          };
         });
     };
 }
