@@ -27,7 +27,7 @@ service WikiService {
 
     // Поиск статей по строке запроса и возвращает метаданные (title + pageid).
     //
-    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND
+    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED
     rpc SearchArticles(SearchArticlesRequest) returns (SearchArticlesResponse);
 }
 
