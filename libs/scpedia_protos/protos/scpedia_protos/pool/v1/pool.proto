@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package scpedia.pool.v1;
+
+// - INVALID_ARGUMENT: некорректные параметры
+// - INTERNAL
+
+// Сервис предоставляет доступ пулу загруженных статей
+service PoolService {
+    // Возвращает статью из пула по вектору предпочтений пользователя.
+    //
+    // Ошибки: INVALID_ARGUMENT, INTERNAL
+    rpc GetArticle(GetArticleRequest) returns (GetArticleResponse);
+}
+
+message ArticleMeta {
+    int64 pageid = 1;
+    string title = 2;
+    string url = 3;
+    string thumbnail_url = 4;
+}
+
+message Article {
+    ArticleMeta meta = 1;
+    string extract = 2;
+    string lang = 3;
+}
+
+message PreferenceVector {
+  bytes data = 1;
+  uint32 dim = 2;
+}
+
+message GetArticleRequest {
+    int32 min_length = 1;
+    bool text = 2;
+    bool image = 3;
+    string lang = 4;
+    PreferenceVector preference = 5;
+}
+
+
+message GetArticleResponse {
+    Article article = 1;
+    bool found = 2;
+}
