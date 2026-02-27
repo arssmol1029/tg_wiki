@@ -11,10 +11,15 @@
         let
           pkgs = nixpkgs.legacyPackages.${system};
           python = pkgs.python312;
+
+          runtimeLibs = [ pkgs.stdenv.cc.cc.lib ];
         in {
           default = pkgs.mkShellNoCC {
             packages =
-              [ python python.pkgs.virtualenv python.pkgs.pip pkgs.zsh ];
+              [ python python.pkgs.virtualenv python.pkgs.pip pkgs.zsh ]
+              ++ runtimeLibs;
+
+            LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath runtimeLibs;
 
             shellHook = ''
               VENV_DIR=".venv"
