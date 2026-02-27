@@ -7,27 +7,28 @@ package myorg.wiki.v1;
 // - UNAVAILABLE: внешнее API недоступно / сетевые проблемы
 // - DEADLINE_EXCEEDED: не уложились в deadline клиента
 // - NOT_FOUND: объект не найден через внешнее API
+// - INTERNAL
 
 // Сервис предоставляет доступ к статьям из википедии, используя внешнее API
 service WikiService {
     // Возвращает случайную статью.
     //
-    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED
+    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, INTERNAL
     rpc GetRandomArticle(GetRandomArticleRequest) returns (GetArticleResponse);
 
     // Возвращает статью по её названию (требуется точное соответствие).
     //
-    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND
+    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND, INTERNAL
     rpc GetArticleByTitle(GetArticleByTitleRequest) returns (GetArticleResponse);
 
     // Возвращает статью по её ID.
     //
-    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND
+    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND, INTERNAL
     rpc GetArticleByPageId(GetArticleByPageIdRequest) returns (GetArticleResponse);
 
     // Поиск статей по строке запроса и возвращает метаданные (title + pageid).
     //
-    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED
+    // Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, INTERNAL
     rpc SearchArticles(SearchArticlesRequest) returns (SearchArticlesResponse);
 }
 
