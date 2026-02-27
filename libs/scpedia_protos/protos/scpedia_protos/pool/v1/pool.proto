@@ -27,8 +27,9 @@ message Article {
 }
 
 message PreferenceVector {
-  bytes data = 1;
-  uint32 dim = 2;
+    // data: float32 little-endian array (f32le), length must be dim*4 bytes.
+    bytes data = 1;
+    uint32 dim = 2;
 }
 
 message GetArticleRequest {
