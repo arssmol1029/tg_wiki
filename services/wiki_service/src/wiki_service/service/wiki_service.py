@@ -118,10 +118,11 @@ class WikiService:
         """
         data = await wiki.fetch_random(self.http, lang=lang, text=text, image=image)
 
-        if not isinstance(data, dict):
+        try:
+            pages = data.get("query", {}).get("pages", {})
+        except AttributeError:
             return None
-        pages = data.get("query", {}).get("pages", {})
-        if not pages:
+        if not isinstance(pages, dict):
             return None
 
         article = next(iter(pages.values()))
@@ -144,10 +145,11 @@ class WikiService:
         """
         data = await wiki.fetch_by_title(self.http, [title], text=text, image=image)
 
-        if not isinstance(data, dict):
+        try:
+            pages = data.get("query", {}).get("pages", {})
+        except AttributeError:
             return None
-        pages = data.get("query", {}).get("pages", {})
-        if not pages:
+        if not isinstance(pages, dict):
             return None
 
         article = next(iter(pages.values()))
@@ -172,10 +174,11 @@ class WikiService:
             self.http, [str(pageid)], lang=lang, text=text, image=image
         )
 
-        if not isinstance(data, dict):
+        try:
+            pages = data.get("query", {}).get("pages", {})
+        except AttributeError:
             return None
-        pages = data.get("query", {}).get("pages", {})
-        if not pages:
+        if not isinstance(pages, dict):
             return None
 
         article = next(iter(pages.values()))
@@ -241,9 +244,12 @@ class WikiService:
         if not isinstance(pages_data, dict):
             return []
 
-        pages = pages_data.get("query", {}).get("pages", {})
-        if not isinstance(pages, dict) or not pages:
-            return []
+        try:
+            pages = pages_data.get("query", {}).get("pages", {})
+        except AttributeError:
+            return None
+        if not isinstance(pages, dict):
+            return None
 
         out: list[ArticleMeta] = [
             _to_article_meta(page)
