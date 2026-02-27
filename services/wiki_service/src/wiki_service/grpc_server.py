@@ -167,12 +167,37 @@ class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
         return wiki_pb2.SearchArticlesResponse(items=[to_pb_meta(m) for m in items])
 
 
+def _http_client_config() -> HttpClientConfig:
+    user_agent = os.getenv("HTTP_USER_AGENT", "scpedia")
+    total_timeout = float(os.getenv("HTTP_TOTAL_TIMEOUT", "10.0"))
+    connect_timeout = float(os.getenv("HTTP_CONNECT_TIMEOUT", "5.0"))
+    sock_read_timeout = float(os.getenv("HTTP_SOCK_READ_TIMEOUT", "10.0"))
+
+    max_connections = int(os.getenv("HTTP_MAX_CONNECTIONS", "50"))
+    max_connections_per_host = int(os.getenv("HTTP_MAX_CONNECTIONS_PER_HOST", "50"))
+    ttl_dns_cache = int(os.getenv("HTTP_TTL_DNS_CACHE", "300"))
+
+    retries = int(os.getenv("HTTP_RETRIES", "2"))
+    retry_base_delay = float(os.getenv("HTTP_RETRY_BASE_DELAY", "0.3"))
+
+    return HttpClientConfig(
+        user_agent=user_agent,
+        total_timeout_sec=total_timeout,
+        connect_timeout_sec=connect_timeout,
+        sock_read_timeout_sec=sock_read_timeout,
+        max_connections=max_connections,
+        max_connections_per_host=max_connections_per_host,
+        ttl_dns_cache_sec=ttl_dns_cache,
+        retries=retries,
+        retry_base_delay_sec=retry_base_delay,
+    )
+
+
 async def serve() -> None:
     host = os.getenv("WIKI_GRPC_HOST", "0.0.0.0")
     port = int(os.getenv("WIKI_GRPC_PORT", "50051"))
-    user_agent = os.getenv("USER_AGENT", "scpedia")
 
-    cfg = HttpClientConfig(user_agent=user_agent)
+    cfg = _http_client_config()
     http = AioHttpClient(cfg)
     await http.start()
 
