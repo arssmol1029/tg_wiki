@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from scpedia_protos.wiki.v1 import wiki_pb2, wiki_pb2_grpc
 
 from wiki_service.internal.errors import HttpRequestError
-from wiki_service.internal.to_pb import to_pb_article, to_pb_meta
+from wiki_service.domain.article import to_pb_meta, to_pb_article
 from wiki_service.grpc_server import WikiGrpcServicer
 from wiki_service.service.wiki_service import Article, ArticleMeta
 

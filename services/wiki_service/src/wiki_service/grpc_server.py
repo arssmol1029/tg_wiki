@@ -19,7 +19,7 @@ from wiki_service.internal.errors import (
     HttpRequestError,
     map_http_error,
 )
-from wiki_service.internal.to_pb import to_pb_meta, to_pb_article
+from wiki_service.domain.article import to_pb_meta, to_pb_article
 
 
 class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):

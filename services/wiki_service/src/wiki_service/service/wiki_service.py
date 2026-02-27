@@ -1,23 +1,9 @@
 from typing import Optional
 from dataclasses import dataclass
 
-from wiki_service.service.http.http_client import HttpClient
+from wiki_service.service.http.http_client import HttpClient, Json
+from wiki_service.domain.article import ArticleMeta, Article
 import wiki_service.service.wiki_client as wiki
-
-
-@dataclass(frozen=True)
-class ArticleMeta:
-    pageid: int
-    title: str
-    url: str | None = None
-    thumbnail_url: str | None = None
-
-
-@dataclass(frozen=True)
-class Article:
-    meta: ArticleMeta
-    extract: str | None
-    lang: str
 
 
 def _to_article_meta(raw: dict) -> ArticleMeta:
@@ -64,7 +50,7 @@ def _to_article(raw: dict, lang: str = "ru") -> Article:
 
 
 def _is_valid_article(
-    article: dict, min_length: int = 0, *, text_required: bool = True
+    raw: Json, min_length: int = 0, *, text_required: bool = True
 ) -> bool:
     """
     Filters the raw article data
@@ -75,18 +61,18 @@ def _is_valid_article(
     Returns:
         True if the article is valid and contains enough information, False otherwise.
     """
-    if not isinstance(article, dict) or not article:
+    if not isinstance(raw, dict) or not raw:
         return False
-    if article.get("missing") is not None:
+    if raw.get("missing") is not None:
         return False
-    if not article.get("pageid"):
+    if not raw.get("pageid"):
         return False
-    if not str(article.get("title", "")).strip():
+    if not str(raw.get("title", "")).strip():
         return False
-    if not str(article.get("fullurl", "")).strip():
+    if not str(raw.get("fullurl", "")).strip():
         return False
     if text_required:
-        extract = str(article.get("extract", "")).strip()
+        extract = str(raw.get("extract", "")).strip()
         if len(extract) < min_length:
             return False
     return True
@@ -118,10 +104,14 @@ class WikiService:
         """
         data = await wiki.fetch_random(self.http, lang=lang, text=text, image=image)
 
-        try:
-            pages = data.get("query", {}).get("pages", {})
-        except AttributeError:
+        if not isinstance(data, dict):
             return None
+
+        query = data.get("query")
+        if not isinstance(query, dict):
+            return None
+
+        pages = query.get("pages")
         if not isinstance(pages, dict):
             return None
 
@@ -145,10 +135,14 @@ class WikiService:
         """
         data = await wiki.fetch_by_title(self.http, [title], text=text, image=image)
 
-        try:
-            pages = data.get("query", {}).get("pages", {})
-        except AttributeError:
+        if not isinstance(data, dict):
             return None
+
+        query = data.get("query")
+        if not isinstance(query, dict):
+            return None
+
+        pages = query.get("pages")
         if not isinstance(pages, dict):
             return None
 
@@ -174,10 +168,14 @@ class WikiService:
             self.http, [str(pageid)], lang=lang, text=text, image=image
         )
 
-        try:
-            pages = data.get("query", {}).get("pages", {})
-        except AttributeError:
+        if not isinstance(data, dict):
             return None
+
+        query = data.get("query")
+        if not isinstance(query, dict):
+            return None
+
+        pages = query.get("pages")
         if not isinstance(pages, dict):
             return None
 
@@ -244,12 +242,13 @@ class WikiService:
         if not isinstance(pages_data, dict):
             return []
 
-        try:
-            pages = pages_data.get("query", {}).get("pages", {})
-        except AttributeError:
-            return None
+        pages_query = pages_data.get("query")
+        if not isinstance(pages_query, dict):
+            return []
+
+        pages = pages_query.get("pages")
         if not isinstance(pages, dict):
-            return None
+            return []
 
         out: list[ArticleMeta] = [
             _to_article_meta(page)

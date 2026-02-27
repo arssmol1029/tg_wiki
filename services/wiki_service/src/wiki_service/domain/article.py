@@ -1,5 +1,21 @@
+from dataclasses import dataclass
+
 from scpedia_protos.wiki.v1 import wiki_pb2
-from wiki_service.service.wiki_service import Article, ArticleMeta
+
+
+@dataclass(frozen=True)
+class ArticleMeta:
+    pageid: int
+    title: str
+    url: str | None = None
+    thumbnail_url: str | None = None
+
+
+@dataclass(frozen=True)
+class Article:
+    meta: ArticleMeta
+    extract: str | None
+    lang: str
 
 
 def to_pb_meta(m: ArticleMeta) -> wiki_pb2.ArticleMeta:
