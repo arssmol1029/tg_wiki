@@ -7,13 +7,13 @@ from scpedia_protos.wiki.v1 import wiki_pb2, wiki_pb2_grpc
 
 from wiki_service.service.http import HttpClient, HttpNotStartedError, HttpRequestError
 from wiki_service.service.wiki_service import WikiService
-from wiki_service.internal.map_api_lang import (
+from wiki_service.internal.langs import (
     normalize_lang,
     supported_langs_list,
     is_supported_lang,
     UnsupportedLanguage,
 )
-from wiki_service.internal.map_http_error import map_http_error
+from wiki_service.internal.errors import map_http_error
 from wiki_service.internal.to_pb import to_pb_meta, to_pb_article
 
 

@@ -1,5 +1,5 @@
 from wiki_service.service.http import HttpClient, Json
-from wiki_service.internal.map_api_lang import map_api_lang
+from wiki_service.internal.langs import map_api_lang
 
 
 IMAGE_WIDTH = 300

@@ -1,8 +1,7 @@
 from typing import Optional
 from dataclasses import dataclass
 
-from wiki_service.service.http import HttpClient, HttpRequestError
-from wiki_service.internal.map_api_lang import UnsupportedLanguage
+from wiki_service.service.http import HttpClient
 import wiki_service.service.wiki_client as wiki
 
 
