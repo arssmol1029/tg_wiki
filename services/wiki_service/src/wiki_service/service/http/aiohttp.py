@@ -1,36 +1,11 @@
 import asyncio
-from dataclasses import dataclass
-from typing import Any, Final
-
 import aiohttp
 
+from dataclasses import dataclass
+from typing import Final, Any
 
-Json = dict[str, Any] | list[Any]
-
-
-class HttpClientError(RuntimeError):
-    """Base error for HTTP client failures."""
-
-
-class HttpNotStartedError(HttpClientError):
-    """Raised when client session is not started."""
-
-
-class HttpRequestError(HttpClientError):
-    """HTTP request failed (transport or non-2xx response)."""
-
-    def __init__(
-        self,
-        message: str,
-        *,
-        status_code: int | None = None,
-        is_transient: bool = False,
-        retry_after_sec: float | None = None,
-    ) -> None:
-        super().__init__(message)
-        self.status_code = status_code
-        self.is_transient = is_transient
-        self.retry_after_sec = retry_after_sec
+from wiki_service.service.http.http_client import HttpClientConfig, Json
+from wiki_service.internal.errors import HttpNotStartedError, HttpRequestError
 
 
 def _parse_retry_after_sec(resp: aiohttp.ClientResponse) -> float | None:
@@ -43,22 +18,7 @@ def _parse_retry_after_sec(resp: aiohttp.ClientResponse) -> float | None:
         return None
 
 
-@dataclass(frozen=True, slots=True)
-class HttpClientConfig:
-    user_agent: str = "scpedia (contact: arssmol1029@gmail.com)"
-    total_timeout_sec: float = 10.0
-    connect_timeout_sec: float = 5.0
-    sock_read_timeout_sec: float = 10.0
-
-    max_connections: int = 50
-    max_connections_per_host: int = 20
-    ttl_dns_cache_sec: int = 300
-
-    retries: int = 2
-    retry_base_delay_sec: float = 0.3
-
-
-class HttpClient:
+class AioHttpClient:
     def __init__(self, config: HttpClientConfig | None = None) -> None:
         self._cfg: Final[HttpClientConfig] = config or HttpClientConfig()
         self._session: aiohttp.ClientSession | None = None

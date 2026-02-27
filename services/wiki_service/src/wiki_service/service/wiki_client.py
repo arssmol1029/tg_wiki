@@ -1,4 +1,4 @@
-from wiki_service.service.http import HttpClient, Json
+from wiki_service.service.http.http_client import HttpClient, Json
 from wiki_service.internal.langs import map_api_lang
 
 
@@ -78,7 +78,7 @@ async def fetch_by_title(
 
 async def fetch_by_pageid(
     http: HttpClient,
-    pageid: list[str],
+    pageids: list[str],
     lang: str = "ru",
     text: bool = True,
     image: bool = True,
@@ -102,7 +102,7 @@ async def fetch_by_pageid(
     params = {
         "action": "query",
         "format": "json",
-        "pageids": "|".join(pageid),
+        "pageids": "|".join(pageids),
         "prop": "|".join(props),
         "exintro": 1,
         "explaintext": 1,

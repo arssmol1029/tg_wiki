@@ -5,7 +5,8 @@ import grpc
 
 from scpedia_protos.wiki.v1 import wiki_pb2, wiki_pb2_grpc
 
-from wiki_service.service.http import HttpClient, HttpNotStartedError, HttpRequestError
+from wiki_service.service.http.http_client import HttpClientConfig
+from wiki_service.service.http.aiohttp import AioHttpClient
 from wiki_service.service.wiki_service import WikiService
 from wiki_service.internal.langs import (
     normalize_lang,
@@ -13,7 +14,11 @@ from wiki_service.internal.langs import (
     is_supported_lang,
     UnsupportedLanguage,
 )
-from wiki_service.internal.errors import map_http_error
+from wiki_service.internal.errors import (
+    HttpNotStartedError,
+    HttpRequestError,
+    map_http_error,
+)
 from wiki_service.internal.to_pb import to_pb_meta, to_pb_article
 
 
@@ -165,8 +170,10 @@ class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
 async def serve() -> None:
     host = os.getenv("WIKI_GRPC_HOST", "0.0.0.0")
     port = int(os.getenv("WIKI_GRPC_PORT", "50051"))
+    user_agent = os.getenv("USER_AGENT", "scpedia")
 
-    http = HttpClient()
+    cfg = HttpClientConfig(user_agent=user_agent)
+    http = AioHttpClient(cfg)
     await http.start()
 
     svc = WikiService(http)

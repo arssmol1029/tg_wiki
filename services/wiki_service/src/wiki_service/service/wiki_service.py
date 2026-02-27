@@ -1,7 +1,7 @@
 from typing import Optional
 from dataclasses import dataclass
 
-from wiki_service.service.http import HttpClient
+from wiki_service.service.http.http_client import HttpClient
 import wiki_service.service.wiki_client as wiki
 
 

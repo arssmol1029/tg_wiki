@@ -1,5 +1,29 @@
 import grpc
-from wiki_service.service.http import HttpRequestError
+
+
+class HttpClientError(RuntimeError):
+    """Base error for HTTP client failures."""
+
+
+class HttpNotStartedError(HttpClientError):
+    """Raised when client session is not started."""
+
+
+class HttpRequestError(HttpClientError):
+    """HTTP request failed (transport or non-2xx response)."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int | None = None,
+        is_transient: bool = False,
+        retry_after_sec: float | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.is_transient = is_transient
+        self.retry_after_sec = retry_after_sec
 
 
 def map_http_error(e: HttpRequestError) -> grpc.StatusCode:
