@@ -1,0 +1,26 @@
+[project]
+name = "pool-service"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "aiohttp>=3.13",
+  "grpcio>=1.78",
+  "scpedia-protos @ file:../../libs/scpedia_protos",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=9",
+  "pytest-asyncio>=1.3",
+  "pytest-mock>=3.15",
+]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+pool-service = "pool_service.main:run"
