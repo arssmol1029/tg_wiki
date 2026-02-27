@@ -104,8 +104,8 @@ class WikiService:
 
     async def get_random_article(
         self,
-        min_length: int = 0,
         *,
+        min_length: int = 0,
         lang: str = "ru",
         text: bool = True,
         image: bool = True
