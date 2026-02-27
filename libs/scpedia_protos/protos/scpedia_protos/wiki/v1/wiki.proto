@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package myorg.wiki.v1;
+package scpedia.wiki.v1;
 
 // - INVALID_ARGUMENT: некорректные параметры
 // - RESOURCE_EXHAUSTED: превышены лимиты

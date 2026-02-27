@@ -31,6 +31,7 @@ class WikiServiceStub(object):
     - UNAVAILABLE: внешнее API недоступно / сетевые проблемы
     - DEADLINE_EXCEEDED: не уложились в deadline клиента
     - NOT_FOUND: объект не найден через внешнее API
+    - INTERNAL
 
     Сервис предоставляет доступ к статьям из википедии, используя внешнее API
     """
@@ -42,22 +43,22 @@ class WikiServiceStub(object):
             channel: A grpc.Channel.
         """
         self.GetRandomArticle = channel.unary_unary(
-                '/myorg.wiki.v1.WikiService/GetRandomArticle',
+                '/scpedia.wiki.v1.WikiService/GetRandomArticle',
                 request_serializer=scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetRandomArticleRequest.SerializeToString,
                 response_deserializer=scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetArticleResponse.FromString,
                 _registered_method=True)
         self.GetArticleByTitle = channel.unary_unary(
-                '/myorg.wiki.v1.WikiService/GetArticleByTitle',
+                '/scpedia.wiki.v1.WikiService/GetArticleByTitle',
                 request_serializer=scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetArticleByTitleRequest.SerializeToString,
                 response_deserializer=scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetArticleResponse.FromString,
                 _registered_method=True)
         self.GetArticleByPageId = channel.unary_unary(
-                '/myorg.wiki.v1.WikiService/GetArticleByPageId',
+                '/scpedia.wiki.v1.WikiService/GetArticleByPageId',
                 request_serializer=scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetArticleByPageIdRequest.SerializeToString,
                 response_deserializer=scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetArticleResponse.FromString,
                 _registered_method=True)
         self.SearchArticles = channel.unary_unary(
-                '/myorg.wiki.v1.WikiService/SearchArticles',
+                '/scpedia.wiki.v1.WikiService/SearchArticles',
                 request_serializer=scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.SearchArticlesRequest.SerializeToString,
                 response_deserializer=scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.SearchArticlesResponse.FromString,
                 _registered_method=True)
@@ -69,6 +70,7 @@ class WikiServiceServicer(object):
     - UNAVAILABLE: внешнее API недоступно / сетевые проблемы
     - DEADLINE_EXCEEDED: не уложились в deadline клиента
     - NOT_FOUND: объект не найден через внешнее API
+    - INTERNAL
 
     Сервис предоставляет доступ к статьям из википедии, используя внешнее API
     """
@@ -76,7 +78,7 @@ class WikiServiceServicer(object):
     def GetRandomArticle(self, request, context):
         """Возвращает случайную статью.
 
-        Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED
+        Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, INTERNAL
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -85,7 +87,7 @@ class WikiServiceServicer(object):
     def GetArticleByTitle(self, request, context):
         """Возвращает статью по её названию (требуется точное соответствие).
 
-        Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND
+        Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND, INTERNAL
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -94,7 +96,7 @@ class WikiServiceServicer(object):
     def GetArticleByPageId(self, request, context):
         """Возвращает статью по её ID.
 
-        Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND
+        Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND, INTERNAL
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -103,7 +105,7 @@ class WikiServiceServicer(object):
     def SearchArticles(self, request, context):
         """Поиск статей по строке запроса и возвращает метаданные (title + pageid).
 
-        Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, NOT_FOUND
+        Ошибки: INVALID_ARGUMENT, RESOURCE_EXHAUSTED, UNAVAILABLE, DEADLINE_EXCEEDED, INTERNAL
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -134,9 +136,9 @@ def add_WikiServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'myorg.wiki.v1.WikiService', rpc_method_handlers)
+            'scpedia.wiki.v1.WikiService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('myorg.wiki.v1.WikiService', rpc_method_handlers)
+    server.add_registered_method_handlers('scpedia.wiki.v1.WikiService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -146,6 +148,7 @@ class WikiService(object):
     - UNAVAILABLE: внешнее API недоступно / сетевые проблемы
     - DEADLINE_EXCEEDED: не уложились в deadline клиента
     - NOT_FOUND: объект не найден через внешнее API
+    - INTERNAL
 
     Сервис предоставляет доступ к статьям из википедии, используя внешнее API
     """
@@ -164,7 +167,7 @@ class WikiService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/myorg.wiki.v1.WikiService/GetRandomArticle',
+            '/scpedia.wiki.v1.WikiService/GetRandomArticle',
             scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetRandomArticleRequest.SerializeToString,
             scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetArticleResponse.FromString,
             options,
@@ -191,7 +194,7 @@ class WikiService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/myorg.wiki.v1.WikiService/GetArticleByTitle',
+            '/scpedia.wiki.v1.WikiService/GetArticleByTitle',
             scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetArticleByTitleRequest.SerializeToString,
             scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetArticleResponse.FromString,
             options,
@@ -218,7 +221,7 @@ class WikiService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/myorg.wiki.v1.WikiService/GetArticleByPageId',
+            '/scpedia.wiki.v1.WikiService/GetArticleByPageId',
             scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetArticleByPageIdRequest.SerializeToString,
             scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.GetArticleResponse.FromString,
             options,
@@ -245,7 +248,7 @@ class WikiService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/myorg.wiki.v1.WikiService/SearchArticles',
+            '/scpedia.wiki.v1.WikiService/SearchArticles',
             scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.SearchArticlesRequest.SerializeToString,
             scpedia__protos_dot_wiki_dot_v1_dot_wiki__pb2.SearchArticlesResponse.FromString,
             options,

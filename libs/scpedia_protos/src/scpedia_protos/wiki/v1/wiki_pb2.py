@@ -24,29 +24,29 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!scpedia_protos/wiki/v1/wiki.proto\x12\rmyorg.wiki.v1\"P\n\x0b\x41rticleMeta\x12\x0e\n\x06pageid\x18\x01 \x01(\x03\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\x15\n\rthumbnail_url\x18\x04 \x01(\t\"R\n\x07\x41rticle\x12(\n\x04meta\x18\x01 \x01(\x0b\x32\x1a.myorg.wiki.v1.ArticleMeta\x12\x0f\n\x07\x65xtract\x18\x02 \x01(\t\x12\x0c\n\x04lang\x18\x03 \x01(\t\"X\n\x17GetRandomArticleRequest\x12\x12\n\nmin_length\x18\x01 \x01(\x05\x12\x0c\n\x04text\x18\x02 \x01(\x08\x12\r\n\x05image\x18\x03 \x01(\x08\x12\x0c\n\x04lang\x18\x04 \x01(\t\"T\n\x18GetArticleByTitleRequest\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\x08\x12\r\n\x05image\x18\x03 \x01(\x08\x12\x0c\n\x04lang\x18\x04 \x01(\t\"V\n\x19GetArticleByPageIdRequest\x12\x0e\n\x06pageid\x18\x01 \x01(\x03\x12\x0c\n\x04text\x18\x02 \x01(\x08\x12\r\n\x05image\x18\x03 \x01(\x08\x12\x0c\n\x04lang\x18\x04 \x01(\t\"L\n\x12GetArticleResponse\x12\'\n\x07\x61rticle\x18\x01 \x01(\x0b\x32\x16.myorg.wiki.v1.Article\x12\r\n\x05\x66ound\x18\x02 \x01(\x08\"C\n\x15SearchArticlesRequest\x12\r\n\x05query\x18\x01 \x01(\t\x12\r\n\x05limit\x18\x02 \x01(\x05\x12\x0c\n\x04lang\x18\x03 \x01(\t\"C\n\x16SearchArticlesResponse\x12)\n\x05items\x18\x01 \x03(\x0b\x32\x1a.myorg.wiki.v1.ArticleMeta2\x8f\x03\n\x0bWikiService\x12]\n\x10GetRandomArticle\x12&.myorg.wiki.v1.GetRandomArticleRequest\x1a!.myorg.wiki.v1.GetArticleResponse\x12_\n\x11GetArticleByTitle\x12\'.myorg.wiki.v1.GetArticleByTitleRequest\x1a!.myorg.wiki.v1.GetArticleResponse\x12\x61\n\x12GetArticleByPageId\x12(.myorg.wiki.v1.GetArticleByPageIdRequest\x1a!.myorg.wiki.v1.GetArticleResponse\x12]\n\x0eSearchArticles\x12$.myorg.wiki.v1.SearchArticlesRequest\x1a%.myorg.wiki.v1.SearchArticlesResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!scpedia_protos/wiki/v1/wiki.proto\x12\x0fscpedia.wiki.v1\"P\n\x0b\x41rticleMeta\x12\x0e\n\x06pageid\x18\x01 \x01(\x03\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\x15\n\rthumbnail_url\x18\x04 \x01(\t\"T\n\x07\x41rticle\x12*\n\x04meta\x18\x01 \x01(\x0b\x32\x1c.scpedia.wiki.v1.ArticleMeta\x12\x0f\n\x07\x65xtract\x18\x02 \x01(\t\x12\x0c\n\x04lang\x18\x03 \x01(\t\"X\n\x17GetRandomArticleRequest\x12\x12\n\nmin_length\x18\x01 \x01(\x05\x12\x0c\n\x04text\x18\x02 \x01(\x08\x12\r\n\x05image\x18\x03 \x01(\x08\x12\x0c\n\x04lang\x18\x04 \x01(\t\"T\n\x18GetArticleByTitleRequest\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\x08\x12\r\n\x05image\x18\x03 \x01(\x08\x12\x0c\n\x04lang\x18\x04 \x01(\t\"V\n\x19GetArticleByPageIdRequest\x12\x0e\n\x06pageid\x18\x01 \x01(\x03\x12\x0c\n\x04text\x18\x02 \x01(\x08\x12\r\n\x05image\x18\x03 \x01(\x08\x12\x0c\n\x04lang\x18\x04 \x01(\t\"N\n\x12GetArticleResponse\x12)\n\x07\x61rticle\x18\x01 \x01(\x0b\x32\x18.scpedia.wiki.v1.Article\x12\r\n\x05\x66ound\x18\x02 \x01(\x08\"C\n\x15SearchArticlesRequest\x12\r\n\x05query\x18\x01 \x01(\t\x12\r\n\x05limit\x18\x02 \x01(\x05\x12\x0c\n\x04lang\x18\x03 \x01(\t\"E\n\x16SearchArticlesResponse\x12+\n\x05items\x18\x01 \x03(\x0b\x32\x1c.scpedia.wiki.v1.ArticleMeta2\x9f\x03\n\x0bWikiService\x12\x61\n\x10GetRandomArticle\x12(.scpedia.wiki.v1.GetRandomArticleRequest\x1a#.scpedia.wiki.v1.GetArticleResponse\x12\x63\n\x11GetArticleByTitle\x12).scpedia.wiki.v1.GetArticleByTitleRequest\x1a#.scpedia.wiki.v1.GetArticleResponse\x12\x65\n\x12GetArticleByPageId\x12*.scpedia.wiki.v1.GetArticleByPageIdRequest\x1a#.scpedia.wiki.v1.GetArticleResponse\x12\x61\n\x0eSearchArticles\x12&.scpedia.wiki.v1.SearchArticlesRequest\x1a\'.scpedia.wiki.v1.SearchArticlesResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'scpedia_protos.wiki.v1.wiki_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_ARTICLEMETA']._serialized_start=52
-  _globals['_ARTICLEMETA']._serialized_end=132
-  _globals['_ARTICLE']._serialized_start=134
-  _globals['_ARTICLE']._serialized_end=216
-  _globals['_GETRANDOMARTICLEREQUEST']._serialized_start=218
-  _globals['_GETRANDOMARTICLEREQUEST']._serialized_end=306
-  _globals['_GETARTICLEBYTITLEREQUEST']._serialized_start=308
-  _globals['_GETARTICLEBYTITLEREQUEST']._serialized_end=392
-  _globals['_GETARTICLEBYPAGEIDREQUEST']._serialized_start=394
-  _globals['_GETARTICLEBYPAGEIDREQUEST']._serialized_end=480
-  _globals['_GETARTICLERESPONSE']._serialized_start=482
-  _globals['_GETARTICLERESPONSE']._serialized_end=558
-  _globals['_SEARCHARTICLESREQUEST']._serialized_start=560
-  _globals['_SEARCHARTICLESREQUEST']._serialized_end=627
-  _globals['_SEARCHARTICLESRESPONSE']._serialized_start=629
-  _globals['_SEARCHARTICLESRESPONSE']._serialized_end=696
-  _globals['_WIKISERVICE']._serialized_start=699
-  _globals['_WIKISERVICE']._serialized_end=1098
+  _globals['_ARTICLEMETA']._serialized_start=54
+  _globals['_ARTICLEMETA']._serialized_end=134
+  _globals['_ARTICLE']._serialized_start=136
+  _globals['_ARTICLE']._serialized_end=220
+  _globals['_GETRANDOMARTICLEREQUEST']._serialized_start=222
+  _globals['_GETRANDOMARTICLEREQUEST']._serialized_end=310
+  _globals['_GETARTICLEBYTITLEREQUEST']._serialized_start=312
+  _globals['_GETARTICLEBYTITLEREQUEST']._serialized_end=396
+  _globals['_GETARTICLEBYPAGEIDREQUEST']._serialized_start=398
+  _globals['_GETARTICLEBYPAGEIDREQUEST']._serialized_end=484
+  _globals['_GETARTICLERESPONSE']._serialized_start=486
+  _globals['_GETARTICLERESPONSE']._serialized_end=564
+  _globals['_SEARCHARTICLESREQUEST']._serialized_start=566
+  _globals['_SEARCHARTICLESREQUEST']._serialized_end=633
+  _globals['_SEARCHARTICLESRESPONSE']._serialized_start=635
+  _globals['_SEARCHARTICLESRESPONSE']._serialized_end=704
+  _globals['_WIKISERVICE']._serialized_start=707
+  _globals['_WIKISERVICE']._serialized_end=1122
 # @@protoc_insertion_point(module_scope)
