@@ -29,9 +29,9 @@ class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
     async def GetRandomArticle(
         self, request: wiki_pb2.GetRandomArticleRequest, context
     ):
-        if request.min_length <= 0:
+        if request.min_length < 0:
             await context.abort(
-                grpc.StatusCode.INVALID_ARGUMENT, "min_length must be > 0"
+                grpc.StatusCode.INVALID_ARGUMENT, "min_length must be >= 0"
             )
 
         lang = normalize_lang(request.lang)
