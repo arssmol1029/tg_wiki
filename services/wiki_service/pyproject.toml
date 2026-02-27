@@ -8,6 +8,13 @@ dependencies = [
   "scpedia-protos @ file:../../libs/scpedia_protos",
 ]
 
+[project.optional-dependencies]
+dev = [
+  "pytest>=9",
+  "pytest-asyncio>=1.3",
+  "pytest-mock>=3.15",
+]
+
 [build-system]
 requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
