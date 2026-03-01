@@ -20,9 +20,9 @@ class PoolWorkerConfig:
     min_inflight: int = 20
 
     @staticmethod
-    def from_env(*, prefix: str = "") -> "PoolWorkerConfig":
+    def from_env(*, prefix: str = "POOL_WORKER") -> "PoolWorkerConfig":
         def _get_int(name: str, default: int) -> int:
-            raw = os.getenv(f"{prefix}{name}")
+            raw = os.getenv(f"{prefix}_{name}")
             if raw is None or not raw.strip():
                 return default
             try:

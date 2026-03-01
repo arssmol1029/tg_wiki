@@ -26,13 +26,13 @@ class ModelClientConfig:
     expiration_ms: int | None = None
 
     @staticmethod
-    def from_env(*, prefix: str = "") -> "ModelClientConfig":
-        amqp_url = os.getenv(f"{prefix}AMQP_URL", "").strip()
+    def from_env(*, prefix: str = "MODEL") -> "ModelClientConfig":
+        amqp_url = os.getenv(f"{prefix}_AMQP_URL", "").strip()
         if not amqp_url:
             raise ValueError("AMQP_URL is required to enable model client")
 
         def _get_int(name: str, default: int) -> int:
-            raw = os.getenv(f"{prefix}{name}")
+            raw = os.getenv(f"{prefix}_{name}")
             if raw is None or not raw.strip():
                 return default
             try:
@@ -41,7 +41,7 @@ class ModelClientConfig:
                 raise ValueError(f"{name} must be an int, got: {raw!r}") from e
 
         def _get_float(name: str, default: float) -> float:
-            raw = os.getenv(f"{prefix}{name}")
+            raw = os.getenv(f"{prefix}_{name}")
             if raw is None or not raw.strip():
                 return default
             try:
@@ -51,7 +51,9 @@ class ModelClientConfig:
 
         return ModelClientConfig(
             amqp_url=amqp_url,
-            requests_queue=os.getenv(f"{prefix}REQUESTS_QUEUE", "model.embed.requests"),
+            requests_queue=os.getenv(
+                f"{prefix}_REQUESTS_QUEUE", "model.embed.requests"
+            ),
             timeout_s=_get_float("TIMEOUT", 30.0),
             prefetch=_get_int("PREFETCH", 200),
             expiration_ms=_get_int("EXPIRATION", 0) or None,

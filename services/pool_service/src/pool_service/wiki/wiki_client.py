@@ -19,13 +19,13 @@ class WikiClientConfig:
     retry_base_delay_s: float = 0.2
 
     @staticmethod
-    def from_env(*, prefix: str = "") -> "WikiClientConfig":
-        target = os.getenv(f"{prefix}TARGET", "").strip()
+    def from_env(*, prefix: str = "WIKI") -> "WikiClientConfig":
+        target = os.getenv(f"{prefix}_TARGET", "").strip()
         if not target:
             raise ValueError("TARGET is required to enable wiki client")
 
         def _get_int(name: str, default: int) -> int:
-            raw = os.getenv(f"{prefix}{name}")
+            raw = os.getenv(f"{prefix}_{name}")
             if raw is None or not raw.strip():
                 return default
             try:
@@ -34,7 +34,7 @@ class WikiClientConfig:
                 raise ValueError(f"{name} must be an int, got: {raw!r}") from e
 
         def _get_float(name: str, default: float) -> float:
-            raw = os.getenv(f"{prefix}{name}")
+            raw = os.getenv(f"{prefix}_{name}")
             if raw is None or not raw.strip():
                 return default
             try:

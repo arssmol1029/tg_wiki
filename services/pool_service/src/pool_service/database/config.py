@@ -16,13 +16,13 @@ class DBConfig:
     echo: bool = False
 
     @staticmethod
-    def from_env(*, prefix: str = "") -> "DBConfig":
-        dsn = os.getenv(f"{prefix}DSN", "").strip()
+    def from_env(*, prefix: str = "DB") -> "DBConfig":
+        dsn = os.getenv(f"{prefix}_DSN", "").strip()
         if not dsn:
             raise ValueError("DSN is required to enable the database")
 
         def _get_int(name: str, default: int) -> int:
-            raw = os.getenv(f"{prefix}{name}")
+            raw = os.getenv(f"{prefix}_{name}")
             if raw is None or not raw.strip():
                 return default
             try:
@@ -31,7 +31,7 @@ class DBConfig:
                 raise ValueError(f"{name} must be an int, got: {raw!r}") from e
 
         def _get_bool(name: str, default: bool) -> bool:
-            raw = os.getenv(f"{prefix}{name}")
+            raw = os.getenv(f"{prefix}_{name}")
             if raw is None:
                 return default
             s = raw.strip().lower()
