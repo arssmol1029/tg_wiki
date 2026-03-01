@@ -5,7 +5,8 @@ from typing import Optional
 
 from scpedia_protos.wiki.v1 import wiki_pb2, wiki_pb2_grpc
 
-from pool_service.domain.article import Article, from_wiki_pb_article
+from pool_service.domain.article import Article
+from pool_service.internal.article_grpc_mapper import from_wiki_pb_article
 
 
 @dataclass(frozen=True, slots=True)
