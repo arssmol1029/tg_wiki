@@ -40,7 +40,7 @@ async def test_get_article_by_title(svc, monkeypatch, payload, expected):
         assert article is None
     else:
         assert article is not None
-        assert article.meta.pageid == expected
+        assert article.pageid == expected
         assert article.lang == "ru"
 
 
@@ -109,7 +109,7 @@ async def test_get_article_by_pageid(svc, monkeypatch, payload, expected):
         assert article is None
     else:
         assert article is not None
-        assert article.meta.pageid == expected
+        assert article.pageid == expected
         assert article.lang == "ru"
 
 
@@ -165,5 +165,5 @@ async def test_get_random_article(svc, monkeypatch, payload, expected):
         assert article is None
     else:
         assert article is not None
-        assert article.meta.pageid == expected
+        assert article.pageid == expected
         assert article.lang == "ru"

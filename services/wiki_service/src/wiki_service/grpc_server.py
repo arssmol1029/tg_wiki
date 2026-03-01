@@ -19,7 +19,7 @@ from wiki_service.internal.errors import (
     HttpRequestError,
     map_http_error,
 )
-from wiki_service.internal.to_pb import to_pb_meta, to_pb_article
+from wiki_service.internal.article_grpc_mapper import to_pb_article
 
 
 class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
@@ -97,7 +97,7 @@ class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
         if article is None:
             await context.abort(grpc.StatusCode.NOT_FOUND, "article not found")
 
-        return wiki_pb2.GetArticleResponse(article=to_pb_article(article), found=True)
+        return wiki_pb2.GetArticleResponse(article=to_pb_article(article), found=True)  # type: ignore
 
     async def GetArticleByPageId(
         self, request: wiki_pb2.GetArticleByPageIdRequest, context
@@ -164,16 +164,16 @@ class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
                 f"language is not supported, try {', '.join(supported_langs_list())}",
             )
 
-        return wiki_pb2.SearchArticlesResponse(items=[to_pb_meta(m) for m in items])
+        return wiki_pb2.SearchArticlesResponse(
+            items=[to_pb_article(article) for article in items]
+        )
 
 
 async def serve() -> None:
     host = os.getenv("WIKI_GRPC_HOST", "0.0.0.0")
     port = int(os.getenv("WIKI_GRPC_PORT", "50051"))
-    user_agent = os.getenv("USER_AGENT", "scpedia")
 
-    cfg = HttpClientConfig(user_agent=user_agent)
-    http = AioHttpClient(cfg)
+    http = AioHttpClient()
     await http.start()
 
     svc = WikiService(http)

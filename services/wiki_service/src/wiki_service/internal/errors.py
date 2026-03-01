@@ -18,12 +18,12 @@ class HttpRequestError(HttpClientError):
         *,
         status_code: int | None = None,
         is_transient: bool = False,
-        retry_after_sec: float | None = None,
+        retry_after_s: float | None = None,
     ) -> None:
         super().__init__(message)
         self.status_code = status_code
         self.is_transient = is_transient
-        self.retry_after_sec = retry_after_sec
+        self.retry_after_s = retry_after_s
 
 
 def map_http_error(e: HttpRequestError) -> grpc.StatusCode:

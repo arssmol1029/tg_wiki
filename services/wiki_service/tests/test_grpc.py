@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock
 from scpedia_protos.wiki.v1 import wiki_pb2, wiki_pb2_grpc
 
 from wiki_service.internal.errors import HttpRequestError
-from wiki_service.internal.to_pb import to_pb_article, to_pb_meta
+from wiki_service.internal.article_grpc_mapper import to_pb_article
 from wiki_service.grpc_server import WikiGrpcServicer
-from wiki_service.service.wiki_service import Article, ArticleMeta
+from wiki_service.domain.article import Article
 
 
 @pytest_asyncio.fixture
@@ -43,7 +43,10 @@ async def test_grpc_get_ok(grpc_stub):
 
     svc.get_article_by_title = AsyncMock(
         return_value=Article(
-            meta=ArticleMeta(pageid=1, title="T", url="U", thumbnail_url=None),
+            pageid=1,
+            title="T",
+            url="U",
+            thumbnail_url=None,
             extract="hello",
             lang="ru",
         )
@@ -55,8 +58,8 @@ async def test_grpc_get_ok(grpc_stub):
     resp = await stub.GetArticleByTitle(req, timeout=1.0)
 
     assert resp.found is True
-    assert resp.article.meta.pageid == 1
-    assert resp.article.meta.title == "T"
+    assert resp.article.pageid == 1
+    assert resp.article.title == "T"
     assert resp.article.lang == "ru"
     assert resp.article.extract == "hello"
 
