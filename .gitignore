@@ -6,5 +6,6 @@ __pycache__/
 .vscode
 *.zip
 build/
+.pytest_cache/
 
 flake.lock
