@@ -120,13 +120,13 @@ class PoolRepo(Protocol):
 
     async def get_active_shards(self, *, lang: str) -> set[tuple[int, int, int]]:
         """
-        Returns the set of active (shard_id, shard_gen) pairs for the given language.
+        Returns the set of active (shard_id, shard_gen, shard_size) for the given language.
 
         Args:
             lang: Language code.
 
         Returns:
-            A set of (shard_id, active_shard_gen) pairs.
+            A set of (shard_id, shard_gen, shard_size).
         """
         ...
 
@@ -200,7 +200,7 @@ class QuarantineRepo(Protocol):
 
     async def release_article(self, *, lang: str, pageid: int) -> bool:
         """
-        Removes a single article from quarantine by (lang, pageid).
+        Releases a single article from quarantine by (lang, pageid).
 
         Args:
             lang: Language code.
@@ -213,7 +213,7 @@ class QuarantineRepo(Protocol):
 
     async def release_by_time(self, *, deadline: datetime) -> int:
         """
-        Removes quarantine entries inserted not later than the given deadline.
+        Releases quarantine entries inserted not later than the given deadline.
 
         Args:
             deadline: All rows with inserted_at <= deadline will be deleted.
