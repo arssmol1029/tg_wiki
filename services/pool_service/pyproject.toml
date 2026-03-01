@@ -10,6 +10,7 @@ dependencies = [
   "alembic>=1.13",
   "pgvector>=0.3.5",
   "scpedia-protos @ file:../../libs/scpedia_protos",
+  "aio_pika>=9.6",
 ]
 
 [project.optional-dependencies]
