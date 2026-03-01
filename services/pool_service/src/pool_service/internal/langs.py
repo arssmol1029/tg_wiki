@@ -9,7 +9,7 @@ def normalize_lang(lang: str) -> str:
 
 
 def supported_langs_list() -> list[str]:
-    return SUPPORTED_LANGS
+    return SUPPORTED_LANGS.copy()
 
 
 def is_supported_lang(lang: str) -> bool:
