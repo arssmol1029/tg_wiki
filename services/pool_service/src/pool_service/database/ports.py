@@ -4,33 +4,32 @@ from typing import Protocol, Sequence
 
 
 @dataclass(frozen=True, slots=True)
-class ArticleUpsert:
+class ShardRef:
     """
-    Represents the external article identity and payload to be stored.
-
-    Notes:
-        This DTO is intended for upsert operations keyed by (lang, pageid).
-    """
-
-    lang: str
-    pageid: int
-    title: str
-    url: str
-    thumbnail_url: str | None = None
-    extract: str | None = None
-    extract_len: int | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class SlotAddress:
-    """
-    Identifies a pool slot within a specific shard generation.
+    Identifies a concrete shard generation.
     """
 
     lang: str
     shard_id: int
     shard_gen: int
-    shift: int
+
+
+@dataclass(frozen=True, slots=True)
+class ArticleInsert:
+    """
+    Represents an article payload to be inserted into a shard generation.
+
+    Note:
+        `embedding` must match the configured embedding dimension.
+    """
+
+    pageid: int
+    title: str
+    url: str
+    thumbnail_url: str
+    extract: str
+    extract_len: int
+    embedding: list[float]
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,146 +54,119 @@ class ArticleRow:
 
 
 @dataclass(frozen=True, slots=True)
-class ShardState:
+class ShardRow:
     """
-    Represents the current active generation and configuration of a shard.
+    Represents a shard generation row.
     """
 
     lang: str
     shard_id: int
+    shard_gen: int
     shard_size: int
-    active_gen: int
-    updated_at: datetime
+    created_at: datetime
 
 
-@dataclass(frozen=True, slots=True)
-class Slot:
-    """
-    Represents an article placement into a pool slot.
-    """
-
-    shift: int
-    article_id: int
-
-
-class ArticleRepo(Protocol):
-    """
-    Provides access to stored articles and their embeddings.
-    """
-
-    async def upsert_article(
-        self,
-        *,
-        a: ArticleUpsert,
-        shard: SlotAddress,
-    ) -> int:
+class PoolRepo(Protocol):
+    async def get_article(self, *, lang: str, pageid: int) -> ArticleRow | None:
         """
-        Upserts an article by (lang, pageid) and assigns it to a pool slot address.
+        Returns an article by (lang, pageid).
 
         Args:
-            a: The article payload keyed by (lang, pageid).
-            shard: The pool slot address to assign the article to.
+            lang: Language code.
+            pageid: Wikipedia page id.
 
         Returns:
-            The internal article_id.
+            ArticleRow if present, otherwise None.
         """
         ...
 
-    async def upsert_embedding(
-        self,
-        *,
-        article_id: int,
-        embedding: list[float],
-    ) -> None:
-        """
-        Upserts an embedding vector for an existing article_id.
-        """
-        ...
-
-    async def get_article_id(self, *, lang: str, pageid: int) -> int | None:
-        """
-        Returns the internal article_id for (lang, pageid) if present.
-        """
-        ...
-
-    async def get_article_by_slot(self, *, slot: SlotAddress) -> ArticleRow | None:
-        """
-        Returns the article assigned to the given pool slot address.
-        """
-        ...
-
-    async def delete_articles_by_shard_gen(
+    async def get_best_articles(
         self,
         *,
         lang: str,
-        shard_id: int,
-        max_shard_gen_inclusive: int,
-    ) -> int:
+        preference: list[float],
+        count: int,
+    ) -> list[ArticleRow]:
         """
-        Deletes all articles for the given shard up to (and including) shard_gen.
+        Returns top-k best matching articles by the preference vector.
+
+        Args:
+            lang: Language code.
+            preference: Preference embedding. Dimension must match stored embedding dimension.
+            k: Number of articles to return.
 
         Returns:
-            Number of deleted articles.
+            A list of up to k articles ordered by similarity (best first).
         """
         ...
 
-
-class ShardRepo(Protocol):
-    """
-    Manages active shard generation state used by the pool.
-    """
-
-    async def get_state(self, *, lang: str, shard_id: int) -> ShardState | None:
-        """
-        Returns shard state if it exists.
-        """
-        ...
-
-    async def lock_state(self, *, lang: str, shard_id: int) -> ShardState:
-        """
-        Locks the shard state row for update and returns it.
-
-        Notes:
-            This method must be used to ensure only one swap happens per shard at a time.
-        """
-        ...
-
-    async def set_active_gen(
+    async def add_pool(
         self,
         *,
         lang: str,
-        shard_id: int,
-        new_active_gen: int,
-        shard_size: int | None = None,
-    ) -> None:
+        articles: Sequence[ArticleInsert],
+    ) -> ShardRef:
         """
-        Sets the active generation for a shard, creating the state row if needed.
+        Adds a new shard generation (a "pool") for the given language.
 
         Args:
-            shard_size: Optional. If provided, updates the shard size as well.
+            lang: Language code.
+            articles: Articles to insert into the new shard generation.
+
+        Returns:
+            ShardRef identifying the newly created shard generation.
+        """
+        ...
+
+    async def get_active_shards(self, *, lang: str) -> set[tuple[int, int]]:
+        """
+        Returns the set of active (shard_id, shard_gen) pairs for the given language.
+
+        Args:
+            lang: Language code.
+
+        Returns:
+            A set of (shard_id, active_shard_gen) pairs.
+        """
+        ...
+
+    async def get_shards_all_gens(self, *, lang: str, shard_id: int) -> list[ShardRow]:
+        """
+        Returns all generations for (lang, shard_id).
+
+        Args:
+            lang: Language code.
+            shard_id: Shard id.
+
+        Returns:
+            A list of all shard generations for this shard_id.
+        """
+        ...
+
+    async def delete_shard(self, *, lang: str, shard_id: int, shard_gen: int) -> None:
+        """
+        Deletes a shard generation and all dependent rows.
+
+        Args:
+            lang: Language code.
+            shard_id: Shard id.
+            shard_gen: Shard generation.
+
+        Returns:
+            None.
         """
         ...
 
 
 class QuarantineRepo(Protocol):
-    """
-    Stores quarantine entries keyed by (lang, pageid) without foreign keys.
-
-    Notes:
-        Quarantine entries may outlive articles and shards.
-    """
-
     async def filter_not_quarantined(
-        self,
-        *,
-        lang: str,
-        pageids: Sequence[int],
+        self, *, lang: str, pageids: Sequence[int]
     ) -> set[int]:
         """
         Returns the subset of pageids that are NOT present in quarantine for the given lang.
 
         Args:
-            lang: struage code.
+            lang: Language code.
             pageids: Candidate pageids to check.
 
         Returns:
@@ -202,67 +174,77 @@ class QuarantineRepo(Protocol):
         """
         ...
 
-    async def add(
+    async def add_shard_to_quarantine(
         self,
         *,
         lang: str,
-        pageid: int,
         shard_id: int,
         shard_gen: int,
-    ) -> None:
-        """
-        Adds (lang, pageid) to quarantine, recording the shard generation context.
-        """
-        ...
-
-    async def remove(self, *, lang: str, pageid: int) -> None:
-        """
-        Removes (lang, pageid) from quarantine.
-        """
-        ...
-
-    async def cleanup_by_time(
-        self, *, older_than: datetime, limit: int = 50_000
+        min_gen_waiting: int,
+        max_gen_waiting: int,
     ) -> int:
         """
-        Deletes quarantine entries older than the given timestamp.
-
-        Returns:
-            Number of deleted entries.
-        """
-        ...
-
-    async def cleanup_by_shard_generations(
-        self,
-        *,
-        lag_generations: int,
-        limit: int = 200_000,
-    ) -> int:
-        """
-        Deletes quarantine entries whose shard_gen is older than (active_gen - lag_generations).
-
-        Notes:
-            Only shards present in the shard state table can be compared. Entries for missing
-            shards are not affected by this cleanup.
+        Adds all articles of the given shard generation into quarantine.
 
         Args:
-            lag_generations: How many generations to retain in quarantine (e.g. 2 keeps
-                the last two generations).
-            limit: Maximum number of rows to delete in one call.
+            lang: Language code.
+            shard_id: Shard id.
+            shard_gen: Shard generation being quarantined.
+            min_gen_waiting: Inclusive lower bound for randrange().
+            max_gen_waiting: Exclusive upper bound for randrange().
 
         Returns:
-            Number of deleted entries.
+            Number of inserted/updated quarantine rows.
+        """
+        ...
+
+    async def remove_article(self, *, lang: str, pageid: int) -> bool:
+        """
+        Removes a single article from quarantine by (lang, pageid).
+
+        Args:
+            lang: Language code.
+            pageid: Wikipedia page id.
+
+        Returns:
+            True if a row was deleted, False otherwise.
+        """
+        ...
+
+    async def purge_inserted_before_or_at(self, *, deadline: datetime) -> int:
+        """
+        Removes quarantine entries inserted not later than the given deadline.
+
+        Args:
+            deadline: All rows with inserted_at <= deadline will be deleted.
+
+        Returns:
+            Number of deleted rows.
+        """
+        ...
+
+    async def release_by_shard_gen(
+        self, *, lang: str, shard_id: int, shard_gen: int
+    ) -> int:
+        """
+        Releases quarantine entries for (lang, shard_id) based on current shard generation.
+
+        Rule:
+            Delete rows where awaited_shard_gen <= shard_gen.
+
+        Args:
+            lang: Language code.
+            shard_id: Shard id.
+            shard_gen: Current (active) shard generation.
+
+        Returns:
+            Number of deleted rows.
         """
         ...
 
 
 class Uow(Protocol):
-    """
-    Provides a transactional unit of work over a single database session/transaction.
-    """
-
-    articles: ArticleRepo
-    shards: ShardRepo
+    pool: PoolRepo
     quarantine: QuarantineRepo
 
     async def __aenter__(self) -> "Uow": ...

@@ -30,11 +30,22 @@ class DBConfig:
             except ValueError as e:
                 raise ValueError(f"{name} must be an int, got: {raw!r}") from e
 
+        def _get_bool(name: str, default: bool) -> bool:
+            raw = os.getenv(f"{prefix}{name}")
+            if raw is None:
+                return default
+            s = raw.strip().lower()
+            if s in ("1", "true", "yes", "y", "on"):
+                return True
+            if s in ("0", "false", "no", "n", "off", ""):
+                return False
+            raise ValueError(f"{name} must be a boolean-like string, got: {raw!r}")
+
         return DBConfig(
             dsn=dsn,
             pool_size=_get_int("DB_POOL_SIZE", 5),
             max_overflow=_get_int("DB_MAX_OVERFLOW", 5),
             pool_timeout=_get_int("DB_POOL_TIMEOUT", 30),
             pool_recycle=_get_int("DB_POOL_RECYCLE", 30),
-            echo=bool(os.getenv("DB_ECHO", False)),
+            echo=_get_bool("DB_ECHO", False),
         )

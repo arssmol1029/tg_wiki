@@ -8,6 +8,25 @@ from pool_service.database.base import Base
 from pool_service.domain.embedding import EMBEDDING_DIM
 
 
+class ShardCount(Base):
+    __tablename__ = "shard_counts"
+
+    lang: Mapped[str] = mapped_column(sa.String, primary_key=True)
+
+    active_shards: Mapped[int] = mapped_column(sa.Integer, nullable=False)
+
+    updated_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True),
+        server_default=sa.func.now(),
+        onupdate=sa.func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        sa.CheckConstraint("active_shards >= 0", name="ck_shard_counts_nonneg"),
+    )
+
+
 class Shard(Base):
     __tablename__ = "shards"
 
@@ -33,7 +52,9 @@ class Shard(Base):
 class Article(Base):
     __tablename__ = "articles"
 
-    article_id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
+    article_id: Mapped[int] = mapped_column(
+        sa.BigInteger, sa.Identity(), primary_key=True
+    )
 
     lang: Mapped[str] = mapped_column(sa.String, nullable=False)
     pageid: Mapped[int] = mapped_column(sa.BigInteger, nullable=False)
@@ -124,7 +145,8 @@ class QuarantineArticle(Base):
     pageid: Mapped[int] = mapped_column(sa.BigInteger, nullable=False)
 
     shard_id: Mapped[int] = mapped_column(sa.Integer, nullable=False)
-    shard_gen: Mapped[int] = mapped_column(sa.Integer, nullable=False)
+
+    awaited_shard_gen: Mapped[int] = mapped_column(sa.Integer, nullable=False)
 
     inserted_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True),
@@ -134,6 +156,6 @@ class QuarantineArticle(Base):
 
     __table_args__ = (
         sa.PrimaryKeyConstraint("lang", "pageid", name="pk_quarantine_articles"),
-        sa.Index("ix_quarantine_by_shard", "lang", "shard_id", "shard_gen"),
+        sa.Index("ix_quarantine_by_shard", "lang", "shard_id", "awaited_shard_gen"),
         sa.Index("ix_quarantine_inserted_at", "inserted_at"),
     )
