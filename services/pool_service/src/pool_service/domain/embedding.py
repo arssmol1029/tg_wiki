@@ -1,5 +1,3 @@
-import struct
-
 from dataclasses import dataclass
 
 

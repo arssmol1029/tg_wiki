@@ -1,24 +1,33 @@
-from pool_service.domain.article import Article, ArticleMeta
-from pool_service.database.ports import ArticleRow, ArticleUpsert
+from pool_service.domain.article import Article
+from pool_service.domain.embedding import EmbeddingVector, EMBEDDING_DIM
+from pool_service.database.ports import ArticleRow, ArticleInsert
 
 
-def to_domain_article(row: ArticleRow) -> Article:
-    meta = ArticleMeta(
-        pageid=row.pageid,
-        title=row.title,
-        url=row.url,
+def from_article_row(row: ArticleRow) -> Article:
+    return Article(
+        pageid=int(row.pageid),
+        title=str(row.title),
+        url=str(row.url),
+        lang=str(row.lang),
         thumbnail_url=row.thumbnail_url or None,
+        extract=row.extract or None,
     )
-    return Article(meta=meta, extract=row.extract or None, lang=row.lang)
 
 
-def from_domain_article(article: Article) -> ArticleUpsert:
-    return ArticleUpsert(
-        pageid=article.meta.pageid,
-        lang=article.lang,
-        url=article.meta.url,
-        title=article.meta.title,
-        thumbnail_url=article.meta.thumbnail_url,
-        extract=article.extract,
-        extract_len=len(article.extract) if article.extract else None,
+def article_to_insert(
+    article: Article, *, embedding: EmbeddingVector | list[float]
+) -> ArticleInsert:
+    if isinstance(embedding, EmbeddingVector):
+        embedding = embedding.data
+
+    extract = article.extract or ""
+
+    return ArticleInsert(
+        pageid=int(article.pageid),
+        title=str(article.title),
+        url=str(article.url),
+        thumbnail_url=str(article.thumbnail_url or ""),
+        extract=str(extract),
+        extract_len=len(extract),
+        embedding=list(map(float, embedding)),
     )
