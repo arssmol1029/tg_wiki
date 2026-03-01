@@ -111,7 +111,7 @@ class PgPoolRepo(PoolRepo):
         rows = (await self._session.execute(query)).scalars().all()
         return [_article_row(row) for row in rows]
 
-    async def add_pool(
+    async def add_shard(
         self,
         *,
         lang: str,
@@ -228,14 +228,17 @@ class PgPoolRepo(PoolRepo):
 
         return ShardRef(lang=lang, shard_id=new_shard_id, shard_gen=new_gen)
 
-    async def get_active_shards(self, *, lang: str) -> set[tuple[int, int]]:
+    async def get_active_shards(self, *, lang: str) -> set[tuple[int, int, int]]:
         query = (
-            select(Shard.shard_id, func.max(Shard.shard_gen))
+            select(Shard.shard_id, func.max(Shard.shard_gen), Shard.shard_size)
             .where(Shard.lang == lang)
             .group_by(Shard.shard_id)
         )
         rows = (await self._session.execute(query)).all()
-        return {(int(shard_id), int(active_gen)) for shard_id, active_gen in rows}
+        return {
+            (int(shard_id), int(active_gen), int(shard_size))
+            for shard_id, active_gen, shard_size in rows
+        }
 
     async def get_shards_all_gens(self, *, lang: str, shard_id: int) -> list[ShardRow]:
         query = (
@@ -322,7 +325,7 @@ class PgQuarantineRepo(QuarantineRepo):
         res = await self._session.execute(stmt)
         return int(res.rowcount or 0)  # type: ignore[attr-defined]
 
-    async def remove_article(self, *, lang: str, pageid: int) -> bool:
+    async def release_article(self, *, lang: str, pageid: int) -> bool:
         stmt = delete(QuarantineArticle).where(
             QuarantineArticle.lang == lang,
             QuarantineArticle.pageid == pageid,
@@ -330,7 +333,7 @@ class PgQuarantineRepo(QuarantineRepo):
         res = await self._session.execute(stmt)
         return bool(res.rowcount)  # type: ignore[attr-defined]
 
-    async def purge_inserted_before_or_at(self, *, deadline: datetime) -> int:
+    async def release_by_time(self, *, deadline: datetime) -> int:
         stmt = delete(QuarantineArticle).where(
             QuarantineArticle.inserted_at <= deadline
         )

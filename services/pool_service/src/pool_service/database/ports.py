@@ -100,14 +100,14 @@ class PoolRepo(Protocol):
         """
         ...
 
-    async def add_pool(
+    async def add_shard(
         self,
         *,
         lang: str,
         articles: Sequence[ArticleInsert],
     ) -> ShardRef:
         """
-        Adds a new shard generation (a "pool") for the given language.
+        Adds a new shard generation for the given language.
 
         Args:
             lang: Language code.
@@ -118,7 +118,7 @@ class PoolRepo(Protocol):
         """
         ...
 
-    async def get_active_shards(self, *, lang: str) -> set[tuple[int, int]]:
+    async def get_active_shards(self, *, lang: str) -> set[tuple[int, int, int]]:
         """
         Returns the set of active (shard_id, shard_gen) pairs for the given language.
 
@@ -198,7 +198,7 @@ class QuarantineRepo(Protocol):
         """
         ...
 
-    async def remove_article(self, *, lang: str, pageid: int) -> bool:
+    async def release_article(self, *, lang: str, pageid: int) -> bool:
         """
         Removes a single article from quarantine by (lang, pageid).
 
@@ -211,7 +211,7 @@ class QuarantineRepo(Protocol):
         """
         ...
 
-    async def purge_inserted_before_or_at(self, *, deadline: datetime) -> int:
+    async def release_by_time(self, *, deadline: datetime) -> int:
         """
         Removes quarantine entries inserted not later than the given deadline.
 
