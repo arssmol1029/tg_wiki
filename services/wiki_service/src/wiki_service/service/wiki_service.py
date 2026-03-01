@@ -2,35 +2,8 @@ from typing import Optional
 from dataclasses import dataclass
 
 from wiki_service.service.http.http_client import HttpClient, Json
-from wiki_service.domain.article import ArticleMeta, Article
+from wiki_service.domain.article import Article
 import wiki_service.service.wiki_client as wiki
-
-
-def _to_article_meta(raw: dict) -> ArticleMeta:
-    """
-    Converts the raw article data from the Wikipedia API into an ArticleMeta object.
-
-    Args:
-        raw: The raw data of the article as returned by the Wikipedia API.
-
-    Returns:
-        An ArticleMeta object containing the article's metadata.
-    """
-    pageid = int(raw["pageid"])
-    title = str(raw.get("title", "")).strip()
-    fullurl = str(raw.get("fullurl", "")).strip()
-
-    thumb = raw.get("thumbnail")
-    thumbnail_url = None
-    if isinstance(thumb, dict):
-        thumbnail_url = thumb.get("source")
-
-    return ArticleMeta(
-        pageid=int(pageid),
-        title=title,
-        url=fullurl,
-        thumbnail_url=thumbnail_url,
-    )
 
 
 def _to_article(raw: dict, lang: str = "ru") -> Article:
@@ -43,10 +16,24 @@ def _to_article(raw: dict, lang: str = "ru") -> Article:
     Returns:
         An Article object containing the article's information.
     """
-    meta = _to_article_meta(raw)
+    pageid = int(raw["pageid"])
+    title = str(raw.get("title", "")).strip()
+    url = str(raw.get("fullurl", "")).strip()
+
+    thumb = raw.get("thumbnail")
+    thumbnail_url = None
+    if isinstance(thumb, dict):
+        thumbnail_url = thumb.get("source")
     extract = str(raw.get("extract", "")).strip()
 
-    return Article(meta=meta, extract=extract, lang=lang)
+    return Article(
+        pageid=int(pageid),
+        title=title,
+        url=url,
+        thumbnail_url=thumbnail_url,
+        extract=extract,
+        lang=lang,
+    )
 
 
 def _is_valid_article(
@@ -84,10 +71,6 @@ class WikiService:
     def __init__(self, http: HttpClient) -> None:
         self._http = http
 
-    @property
-    def http(self) -> HttpClient:
-        return self._http
-
     async def get_random_article(
         self,
         *,
@@ -102,7 +85,7 @@ class WikiService:
         Returns:
             A dictionary containing the article's information or None if no valid article was found.
         """
-        data = await wiki.fetch_random(self.http, lang=lang, text=text, image=image)
+        data = await wiki.fetch_random(self._http, lang=lang, text=text, image=image)
 
         if not isinstance(data, dict):
             return None
@@ -119,7 +102,7 @@ class WikiService:
         if not _is_valid_article(article, min_length=min_length, text_required=text):
             return None
 
-        return _to_article(article, lang=lang)
+        return _to_article(article, lang=lang)  # type: ignore
 
     async def get_article_by_title(
         self, title: str, *, lang: str = "ru", text: bool = True, image: bool = True
@@ -133,39 +116,8 @@ class WikiService:
         Returns:
             A dictionary containing the article's information, or None if no valid article was found.
         """
-        data = await wiki.fetch_by_title(self.http, [title], text=text, image=image)
-
-        if not isinstance(data, dict):
-            return None
-
-        query = data.get("query")
-        if not isinstance(query, dict):
-            return None
-
-        pages = query.get("pages")
-        if not isinstance(pages, dict):
-            return None
-
-        article = next(iter(pages.values()))
-        if not _is_valid_article(article, text_required=text):
-            return None
-
-        return _to_article(article, lang=lang)
-
-    async def get_article_by_pageid(
-        self, pageid: int, *, lang: str = "ru", text: bool = True, image: bool = True
-    ) -> Optional[Article]:
-        """
-        Fetches an article by its pageid from the Ru Wikipedia and checks if it's valid.
-
-        Args:
-            pageid: The pageid of the article to fetch.
-
-        Returns:
-            A dictionary containing the article's information, or None if no valid article was found.
-        """
-        data = await wiki.fetch_by_pageid(
-            self.http, [str(pageid)], lang=lang, text=text, image=image
+        data = await wiki.fetch_by_title(
+            self._http, [title], lang=lang, text=text, image=image
         )
 
         if not isinstance(data, dict):
@@ -183,11 +135,44 @@ class WikiService:
         if not _is_valid_article(article, text_required=text):
             return None
 
-        return _to_article(article, lang=lang)
+        return _to_article(article, lang=lang)  # type: ignore
+
+    async def get_article_by_pageid(
+        self, pageid: int, *, lang: str = "ru", text: bool = True, image: bool = True
+    ) -> Optional[Article]:
+        """
+        Fetches an article by its pageid from the Ru Wikipedia and checks if it's valid.
+
+        Args:
+            pageid: The pageid of the article to fetch.
+
+        Returns:
+            A dictionary containing the article's information, or None if no valid article was found.
+        """
+        data = await wiki.fetch_by_pageid(
+            self._http, [str(pageid)], lang=lang, text=text, image=image
+        )
+
+        if not isinstance(data, dict):
+            return None
+
+        query = data.get("query")
+        if not isinstance(query, dict):
+            return None
+
+        pages = query.get("pages")
+        if not isinstance(pages, dict):
+            return None
+
+        article = next(iter(pages.values()))
+        if not _is_valid_article(article, text_required=text):
+            return None
+
+        return _to_article(article, lang=lang)  # type: ignore
 
     async def search_articles(
         self, query: str, *, lang: str = "ru", limit: int = 5
-    ) -> list[ArticleMeta]:
+    ) -> list[Article]:
         """
         Searches for articles by query on the Ru Wikipedia.
 
@@ -200,7 +185,7 @@ class WikiService:
         titles: set[str] = set()
 
         data_title = await wiki.search_by_title(
-            self.http, query, lang=lang, limit=limit
+            self._http, query, lang=lang, limit=limit
         )
 
         if (
@@ -217,11 +202,14 @@ class WikiService:
 
         if len(titles) < limit:
             data_text = await wiki.search_by_text(
-                self.http, query, lang=lang, limit=limit - len(titles)
+                self._http, query, lang=lang, limit=limit - len(titles)
             )
 
             if isinstance(data_text, dict):
-                search_items = data_text.get("query", {}).get("search", [])
+                try:
+                    search_items = data_text.get("query", {}).get("search", [])  # type: ignore
+                except AttributeError:
+                    return []
                 if isinstance(search_items, list):
                     for item in search_items:
                         if len(titles) >= limit:
@@ -236,7 +224,7 @@ class WikiService:
             return []
 
         pages_data = await wiki.fetch_by_title(
-            self.http, list(titles), lang=lang, text=False
+            self._http, list(titles), lang=lang, text=False
         )
 
         if not isinstance(pages_data, dict):
@@ -250,8 +238,8 @@ class WikiService:
         if not isinstance(pages, dict):
             return []
 
-        out: list[ArticleMeta] = [
-            _to_article_meta(page)
+        out: list[Article] = [
+            _to_article(page, lang=lang)  # type: ignore
             for page in pages.values()
             if _is_valid_article(page, text_required=False)
         ]

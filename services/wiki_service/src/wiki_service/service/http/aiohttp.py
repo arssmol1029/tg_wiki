@@ -1,14 +1,13 @@
 import asyncio
 import aiohttp
 
-from dataclasses import dataclass
-from typing import Final, Any
+from typing import Any
 
 from wiki_service.service.http.http_client import HttpClientConfig, Json
 from wiki_service.internal.errors import HttpNotStartedError, HttpRequestError
 
 
-def _parse_retry_after_sec(resp: aiohttp.ClientResponse) -> float | None:
+def _parse_retry_after_s(resp: aiohttp.ClientResponse) -> float | None:
     ra = resp.headers.get("Retry-After")
     if not ra:
         return None
@@ -20,7 +19,7 @@ def _parse_retry_after_sec(resp: aiohttp.ClientResponse) -> float | None:
 
 class AioHttpClient:
     def __init__(self, config: HttpClientConfig | None = None) -> None:
-        self._cfg: Final[HttpClientConfig] = config or HttpClientConfig()
+        self._cfg: HttpClientConfig = config or HttpClientConfig.from_env()
         self._session: aiohttp.ClientSession | None = None
 
     @property
@@ -34,15 +33,15 @@ class AioHttpClient:
             return
 
         timeout = aiohttp.ClientTimeout(
-            total=self._cfg.total_timeout_sec,
-            connect=self._cfg.connect_timeout_sec,
-            sock_read=self._cfg.sock_read_timeout_sec,
+            total=self._cfg.total_timeout_s,
+            connect=self._cfg.connect_timeout_s,
+            sock_read=self._cfg.sock_read_timeout_s,
         )
 
         connector = aiohttp.TCPConnector(
             limit=self._cfg.max_connections,
             limit_per_host=self._cfg.max_connections_per_host,
-            ttl_dns_cache=self._cfg.ttl_dns_cache_sec,
+            ttl_dns_cache=self._cfg.ttl_dns_cache_s,
         )
 
         headers = {
@@ -92,7 +91,7 @@ class AioHttpClient:
                             f"HTTP {resp.status}: {text[:300]}",
                             status_code=resp.status,
                             is_transient=True,
-                            retry_after_sec=_parse_retry_after_sec(resp),
+                            retry_after_s=_parse_retry_after_s(resp),
                         )
 
                     if resp.status < 200 or resp.status >= 300:
@@ -123,7 +122,7 @@ class AioHttpClient:
 
                 if attempt >= self._cfg.retries:
                     raise err from e
-                await asyncio.sleep(self._cfg.retry_base_delay_sec * (2**attempt))
+                await asyncio.sleep(self._cfg.retry_base_delay_s * (2**attempt))
                 continue
 
             except HttpRequestError as e:
@@ -135,9 +134,9 @@ class AioHttpClient:
                 if attempt >= self._cfg.retries:
                     raise
 
-                delay = e.retry_after_sec
+                delay = e.retry_after_s
                 if delay is None:
-                    delay = self._cfg.retry_base_delay_sec * (2**attempt)
+                    delay = self._cfg.retry_base_delay_s * (2**attempt)
                 await asyncio.sleep(delay)
                 continue
 
