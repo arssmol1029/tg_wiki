@@ -24,23 +24,27 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!scpedia_protos/pool/v1/pool.proto\x12\x0fscpedia.pool.v1\"P\n\x0b\x41rticleMeta\x12\x0e\n\x06pageid\x18\x01 \x01(\x03\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\x15\n\rthumbnail_url\x18\x04 \x01(\t\"T\n\x07\x41rticle\x12*\n\x04meta\x18\x01 \x01(\x0b\x32\x1c.scpedia.pool.v1.ArticleMeta\x12\x0f\n\x07\x65xtract\x18\x02 \x01(\t\x12\x0c\n\x04lang\x18\x03 \x01(\t\"-\n\x10PreferenceVector\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x12\x0b\n\x03\x64im\x18\x02 \x01(\r\"\x89\x01\n\x11GetArticleRequest\x12\x12\n\nmin_length\x18\x01 \x01(\x05\x12\x0c\n\x04text\x18\x02 \x01(\x08\x12\r\n\x05image\x18\x03 \x01(\x08\x12\x0c\n\x04lang\x18\x04 \x01(\t\x12\x35\n\npreference\x18\x05 \x01(\x0b\x32!.scpedia.pool.v1.PreferenceVector\"N\n\x12GetArticleResponse\x12)\n\x07\x61rticle\x18\x01 \x01(\x0b\x32\x18.scpedia.pool.v1.Article\x12\r\n\x05\x66ound\x18\x02 \x01(\x08\x32\x64\n\x0bPoolService\x12U\n\nGetArticle\x12\".scpedia.pool.v1.GetArticleRequest\x1a#.scpedia.pool.v1.GetArticleResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!scpedia_protos/pool/v1/pool.proto\x12\x0fscpedia.pool.v1\"k\n\x07\x41rticle\x12\x0e\n\x06pageid\x18\x01 \x01(\x03\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\x15\n\rthumbnail_url\x18\x04 \x01(\t\x12\x0f\n\x07\x65xtract\x18\x05 \x01(\t\x12\x0c\n\x04lang\x18\x06 \x01(\t\"-\n\x10PreferenceVector\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x12\x0b\n\x03\x64im\x18\x02 \x01(\r\"A\n\tSeenShard\x12\x10\n\x08shard_id\x18\x01 \x01(\r\x12\x11\n\tshard_gen\x18\x02 \x01(\x04\x12\x0f\n\x07\x62itmask\x18\x03 \x01(\x0c\"E\n\nShardState\x12\x10\n\x08shard_id\x18\x01 \x01(\r\x12\x11\n\tshard_gen\x18\x02 \x01(\x04\x12\x12\n\nshard_size\x18\x03 \x01(\r\"_\n\rPooledArticle\x12)\n\x07\x61rticle\x18\x01 \x01(\x0b\x32\x18.scpedia.pool.v1.Article\x12\x10\n\x08shard_id\x18\x02 \x01(\r\x12\x11\n\tbit_index\x18\x03 \x01(\r\"\xc9\x01\n\x11GetArticleRequest\x12\r\n\x05\x63ount\x18\x01 \x01(\r\x12\x12\n\nmin_length\x18\x02 \x01(\x05\x12\x0c\n\x04text\x18\x03 \x01(\x08\x12\r\n\x05image\x18\x04 \x01(\x08\x12\x0c\n\x04lang\x18\x05 \x01(\t\x12\x35\n\npreference\x18\x06 \x01(\x0b\x32!.scpedia.pool.v1.PreferenceVector\x12/\n\x0bseen_shards\x18\x07 \x03(\x0b\x32\x1a.scpedia.pool.v1.SeenShard\"y\n\x12GetArticleResponse\x12\x30\n\x08\x61rticles\x18\x01 \x03(\x0b\x32\x1e.scpedia.pool.v1.PooledArticle\x12\x31\n\x0cshard_states\x18\x02 \x03(\x0b\x32\x1b.scpedia.pool.v1.ShardState2d\n\x0bPoolService\x12U\n\nGetArticle\x12\".scpedia.pool.v1.GetArticleRequest\x1a#.scpedia.pool.v1.GetArticleResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'scpedia_protos.pool.v1.pool_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_ARTICLEMETA']._serialized_start=54
-  _globals['_ARTICLEMETA']._serialized_end=134
-  _globals['_ARTICLE']._serialized_start=136
-  _globals['_ARTICLE']._serialized_end=220
-  _globals['_PREFERENCEVECTOR']._serialized_start=222
-  _globals['_PREFERENCEVECTOR']._serialized_end=267
-  _globals['_GETARTICLEREQUEST']._serialized_start=270
-  _globals['_GETARTICLEREQUEST']._serialized_end=407
-  _globals['_GETARTICLERESPONSE']._serialized_start=409
-  _globals['_GETARTICLERESPONSE']._serialized_end=487
-  _globals['_POOLSERVICE']._serialized_start=489
-  _globals['_POOLSERVICE']._serialized_end=589
+  _globals['_ARTICLE']._serialized_start=54
+  _globals['_ARTICLE']._serialized_end=161
+  _globals['_PREFERENCEVECTOR']._serialized_start=163
+  _globals['_PREFERENCEVECTOR']._serialized_end=208
+  _globals['_SEENSHARD']._serialized_start=210
+  _globals['_SEENSHARD']._serialized_end=275
+  _globals['_SHARDSTATE']._serialized_start=277
+  _globals['_SHARDSTATE']._serialized_end=346
+  _globals['_POOLEDARTICLE']._serialized_start=348
+  _globals['_POOLEDARTICLE']._serialized_end=443
+  _globals['_GETARTICLEREQUEST']._serialized_start=446
+  _globals['_GETARTICLEREQUEST']._serialized_end=647
+  _globals['_GETARTICLERESPONSE']._serialized_start=649
+  _globals['_GETARTICLERESPONSE']._serialized_end=770
+  _globals['_POOLSERVICE']._serialized_start=772
+  _globals['_POOLSERVICE']._serialized_end=872
 # @@protoc_insertion_point(module_scope)

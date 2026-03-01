@@ -7,23 +7,22 @@ package scpedia.pool.v1;
 
 // Сервис предоставляет доступ пулу загруженных статей
 service PoolService {
-    // Возвращает статью из пула по вектору предпочтений пользователя.
+    // Возвращает статьи из пула по вектору предпочтений пользователя.
+    //
+    // Клиент присылает seen-битмаски; сервер не возвращает повторно
+    // статьи, отмеченные как seen в актуальных шардах.
     //
     // Ошибки: INVALID_ARGUMENT, INTERNAL
     rpc GetArticle(GetArticleRequest) returns (GetArticleResponse);
 }
 
-message ArticleMeta {
+message Article {
     int64 pageid = 1;
     string title = 2;
     string url = 3;
     string thumbnail_url = 4;
-}
-
-message Article {
-    ArticleMeta meta = 1;
-    string extract = 2;
-    string lang = 3;
+    string extract = 5;
+    string lang = 6;
 }
 
 message PreferenceVector {
@@ -32,16 +31,43 @@ message PreferenceVector {
     uint32 dim = 2;
 }
 
-message GetArticleRequest {
-    int32 min_length = 1;
-    bool text = 2;
-    bool image = 3;
-    string lang = 4;
-    PreferenceVector preference = 5;
+message SeenShard {
+    uint32 shard_id = 1;
+    uint64 shard_gen = 2;
+    // Битовая маска seen-флагов.
+    // bit=1 => seen.
+    bytes bitmask = 3;
 }
 
+message ShardState {
+    uint32 shard_id = 1;
+    uint64 shard_gen = 2;
+    uint32 shard_size = 3;
+}
+
+message PooledArticle {
+    Article article = 1;
+    uint32 shard_id = 2;
+    uint32 bit_index = 3;
+}
+
+message GetArticleRequest {
+    // Сколько статей вернуть.
+    uint32 count = 1;
+
+    int32 min_length = 2;
+    bool text = 3;
+    bool image = 4;
+    string lang = 5;
+    PreferenceVector preference = 6;
+
+    repeated SeenShard seen_shards = 7;
+}
 
 message GetArticleResponse {
-    Article article = 1;
-    bool found = 2;
+    // Список найденных статей (может быть меньше count).
+    // Если ничего не найдено, список пустой.
+    repeated PooledArticle articles = 1;
+
+    repeated ShardState shard_states = 2;
 }
