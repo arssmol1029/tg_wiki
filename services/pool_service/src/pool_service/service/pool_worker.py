@@ -1,10 +1,12 @@
-from dataclasses import dataclass
 import asyncio
 import inspect
+import os
+
+from dataclasses import dataclass
 from typing import Iterable, Callable
 
 from pool_service.database.ports import Uow
-from pool_service.domain.article import Article, PooledArticle
+from pool_service.domain.article import Article, EmbeddedArticle
 from pool_service.domain.embedding import EmbeddingVector
 from pool_service.wiki.wiki_client import WikiClient
 from pool_service.model.model_client import ModelClient
@@ -13,9 +15,27 @@ from pool_service.model.model_client import ModelClient
 @dataclass(frozen=True, slots=True)
 class PoolWorkerConfig:
     concurrency: int = 10
-    max_attempts_multiplier: int = 5
+    max_attempts: int = 5
     max_inflight: int = 50
     min_inflight: int = 20
+
+    @staticmethod
+    def from_env(*, prefix: str = "") -> "PoolWorkerConfig":
+        def _get_int(name: str, default: int) -> int:
+            raw = os.getenv(f"{prefix}{name}")
+            if raw is None or not raw.strip():
+                return default
+            try:
+                return int(raw)
+            except ValueError as e:
+                raise ValueError(f"{name} must be an int, got: {raw!r}") from e
+
+        return PoolWorkerConfig(
+            concurrency=_get_int("CONCURRENCY", 10),
+            max_attempts=_get_int("MAX_ATTEMPTS", 5),
+            max_inflight=_get_int("MAX_INFLIGHT", 50),
+            min_inflight=_get_int("MIN_INFLIGHT", 20),
+        )
 
 
 class PoolWorker:
@@ -30,7 +50,7 @@ class PoolWorker:
         self._wiki = wiki
         self._model = model
         self._uow_factory = uow_factory
-        self._cfg = cfg or PoolWorkerConfig()
+        self._cfg = cfg or PoolWorkerConfig.from_env()
 
     async def produce_batch(
         self,
@@ -42,7 +62,7 @@ class PoolWorker:
         wiki_timeout_s: float | None = None,
         max_inflight: int | None = None,
         min_inflight: int | None = None,
-    ) -> list[PooledArticle]:
+    ) -> list[EmbeddedArticle]:
         if n <= 0:
             return []
 
@@ -56,10 +76,10 @@ class PoolWorker:
 
         wiki_sem = asyncio.Semaphore(self._cfg.concurrency)
         seen: set[int] = set()
-        out: list[PooledArticle] = []
+        out: list[EmbeddedArticle] = []
         pending: dict[asyncio.Task[EmbeddingVector], Article] = {}
 
-        max_attempts = n * self._cfg.max_attempts_multiplier
+        max_attempts = n * self._cfg.max_attempts
         attempts = 0
 
         async def fetch_one() -> Article | None:
@@ -81,20 +101,20 @@ class PoolWorker:
         def _harvest_done(
             *, done_tasks: Iterable[asyncio.Task[EmbeddingVector]]
         ) -> None:
-            for t in done_tasks:
-                article = pending.pop(t, None)
+            for task in done_tasks:
+                article = pending.pop(task, None)
                 if article is None:
                     continue
                 try:
-                    emb = t.result()
+                    embedding = task.result()
                 except Exception:
                     continue
-                out.append(PooledArticle(article, embedding=emb))
+                out.append(EmbeddedArticle(article, embedding=embedding))
 
         async def _drain_ready_now() -> None:
             if not pending:
                 return
-            done = [t for t in pending.keys() if t.done()]
+            done = [task for task in pending.keys() if task.done()]
             if done:
                 _harvest_done(done_tasks=done)
 
@@ -144,14 +164,14 @@ class PoolWorker:
                     )
                     attempts += round_size
 
-                    for r in results:
-                        if isinstance(r, BaseException) or r is None:
+                    for result in results:
+                        if isinstance(result, BaseException) or result is None:
                             continue
-                        pid = int(r.meta.pageid)
+                        pid = int(result.pageid)
                         if pid in seen:
                             continue
                         seen.add(pid)
-                        candidates.append(r)
+                        candidates.append(result)
                         candidate_ids.append(pid)
 
                 if not candidates:
@@ -165,12 +185,12 @@ class PoolWorker:
                 if not allowed_ids:
                     continue
 
-                for a in candidates:
-                    if int(a.meta.pageid) not in allowed_ids:
+                for article in candidates:
+                    if int(article.pageid) not in allowed_ids:
                         continue
                     if len(pending) >= max_inflight:
                         break
-                    _launch_embedding(a)
+                    _launch_embedding(article)
 
             while len(out) < n and pending:
                 done, _ = await asyncio.wait(
@@ -182,8 +202,8 @@ class PoolWorker:
 
         finally:
             if pending:
-                for t in list(pending.keys()):
-                    t.cancel()
+                for task in list(pending.keys()):
+                    task.cancel()
                 await asyncio.gather(*pending.keys(), return_exceptions=True)
                 pending.clear()
 

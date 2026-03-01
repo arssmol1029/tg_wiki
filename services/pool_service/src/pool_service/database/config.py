@@ -17,9 +17,9 @@ class DBConfig:
 
     @staticmethod
     def from_env(*, prefix: str = "") -> "DBConfig":
-        dsn = os.getenv(f"{prefix}DB_DSN", "").strip()
+        dsn = os.getenv(f"{prefix}DSN", "").strip()
         if not dsn:
-            raise ValueError("DB_DSN is required to enable the database")
+            raise ValueError("DSN is required to enable the database")
 
         def _get_int(name: str, default: int) -> int:
             raw = os.getenv(f"{prefix}{name}")
@@ -43,9 +43,9 @@ class DBConfig:
 
         return DBConfig(
             dsn=dsn,
-            pool_size=_get_int("DB_POOL_SIZE", 5),
-            max_overflow=_get_int("DB_MAX_OVERFLOW", 5),
-            pool_timeout=_get_int("DB_POOL_TIMEOUT", 30),
-            pool_recycle=_get_int("DB_POOL_RECYCLE", 30),
-            echo=_get_bool("DB_ECHO", False),
+            pool_size=_get_int("POOL_SIZE", 5),
+            max_overflow=_get_int("MAX_OVERFLOW", 5),
+            pool_timeout=_get_int("POOL_TIMEOUT", 30),
+            pool_recycle=_get_int("POOL_RECYCLE", 1800),
+            echo=_get_bool("ECHO", False),
         )

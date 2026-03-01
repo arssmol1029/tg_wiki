@@ -1,5 +1,7 @@
 import asyncio
 import grpc
+import os
+
 from dataclasses import dataclass
 from typing import Optional
 
@@ -16,13 +18,44 @@ class WikiClientConfig:
     max_retries: int = 2
     retry_base_delay_s: float = 0.2
 
+    @staticmethod
+    def from_env(*, prefix: str = "") -> "WikiClientConfig":
+        target = os.getenv(f"{prefix}TARGET", "").strip()
+        if not target:
+            raise ValueError("TARGET is required to enable wiki client")
+
+        def _get_int(name: str, default: int) -> int:
+            raw = os.getenv(f"{prefix}{name}")
+            if raw is None or not raw.strip():
+                return default
+            try:
+                return int(raw)
+            except ValueError as e:
+                raise ValueError(f"{name} must be an int, got: {raw!r}") from e
+
+        def _get_float(name: str, default: float) -> float:
+            raw = os.getenv(f"{prefix}{name}")
+            if raw is None or not raw.strip():
+                return default
+            try:
+                return float(raw)
+            except ValueError as e:
+                raise ValueError(f"{name} must be an float, got: {raw!r}") from e
+
+        return WikiClientConfig(
+            target=target,
+            default_timeout_s=_get_float("DEFAULT_TIMEOUT", 2.0),
+            max_retries=_get_int("MAX_RETRIES", 2),
+            retry_base_delay_s=_get_float("RETRY_BASE_DELAY", 0.2),
+        )
+
 
 class WikiClient:
 
-    def __init__(self, cfg: WikiClientConfig) -> None:
-        self._cfg = cfg
+    def __init__(self, cfg: WikiClientConfig | None = None) -> None:
         self._channel: grpc.aio.Channel | None = None
         self._stub: wiki_pb2_grpc.WikiServiceStub | None = None
+        self._cfg = cfg or WikiClientConfig.from_env()
 
     async def start(self) -> None:
         if self._channel is not None:
