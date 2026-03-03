@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package scpedia.rec.v1;
+
+// - INVALID_ARGUMENT: некорректные параметры
+// - DEADLINE_EXCEEDED: не уложились в deadline клиента
+// - INTERNAL
+
+// Сервис предоставляет доступ пулу загруженных статей
+service RecService {
+    // Возвращает статьи, рекомендованные для пользователя
+    //
+    // Ошибки: INVALID_ARGUMENT, DEADLINE_EXCEEDED, INTERNAL
+    rpc GetArticle(GetArticleRequest) returns (GetArticleResponse);
+
+    // Обновляет предпочтения по реакции на выбранную статью
+    //
+    // Ошибки: INVALID_ARGUMENT, DEADLINE_EXCEEDED, INTERNAL
+    rpc UpdatePreference(UpdatePreferenceRequest) returns (UpdatePreferenceResponse);
+
+    // Создаёт объект пользователя
+    // 
+    // Ошибки: INVALID_ARGUMENT, DEADLINE_EXCEEDED, INTERNAL
+    rpc CreateUser(UpsertUserRequest) returns (CreateUserResponse);
+
+    // Сбрасывает предпочтения для пользователя
+    // 
+    // Ошибки: INVALID_ARGUMENT, DEADLINE_EXCEEDED, INTERNAL
+    rpc ResetUser(UpsertUserRequest) returns (ResetUserResponse);
+}
+
+message Article {
+    int64 pageid = 1;
+    string title = 2;
+    string url = 3;
+    string thumbnail_url = 4;
+    string extract = 5;
+    string lang = 6;
+}
+
+message GetArticleRequest {
+    int64 userid = 1;
+    // Сколько статей вернуть.
+    uint32 count = 2;
+    string lang = 3;
+    int32 min_length = 4;
+    bool text = 5;
+    bool image = 6;
+}
+
+message GetArticleResponse {
+    // Список найденных статей (может быть меньше count).
+    // Если ничего не найдено, список пустой.
+    repeated Article articles = 1;
+}
+
+message UpdatePreferenceRequest {
+    int64 userid = 1;
+    // По какой статье обновляется эмбеддинг
+    string lang = 2;
+    int64 pageid = 3;
+    // Код реакции
+    int32 reaction = 4;
+}
+
+message UpdatePreferenceResponse {
+    bool success = 1;
+}
+
+message UpsertUserRequest {
+    int64 userid = 1;
+    int32 calibration_size = 2;
+}
+
+message CreateUserResponse {
+    // True, если пользователь успешно создан
+    bool success = 1;
+}
+
+message ResetUserResponse {
+    // True, если настройки для пользователя успешно сброшены
+    bool success = 1;
+}
