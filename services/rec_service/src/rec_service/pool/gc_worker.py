@@ -23,7 +23,7 @@ class GCWorkerConfig:
     min_sleep_s: float = 0.2
 
     @staticmethod
-    def from_env(*, prefix: str = "DB_JANITOR") -> "GCWorkerConfig":
+    def from_env(*, prefix: str = "GCWorker") -> "GCWorkerConfig":
         def _get_float(name: str, default: float) -> float:
             raw = os.getenv(f"{prefix}_{name}")
             if raw is None or not raw.strip():
