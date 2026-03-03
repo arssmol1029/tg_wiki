@@ -4,6 +4,7 @@ import uuid
 import os
 
 from dataclasses import dataclass
+from datetime import timedelta
 
 import aio_pika
 from aio_pika.abc import (
@@ -13,16 +14,21 @@ from aio_pika.abc import (
     AbstractQueue,
 )
 
-from pool_service.domain.article import Article
-from pool_service.domain.embedding import EmbeddingVector, EMBEDDING_DIM
+from rec_service.domain.article import Article
+from rec_service.domain.embedding import Embedding
+from rec_service.domain.vector import is_valid_vector
 
 
 @dataclass(frozen=True, slots=True)
 class ModelClientConfig:
     amqp_url: str
+
     requests_queue: str = "model.embed.requests"
+
     timeout_s: float = 30.0
+
     prefetch: int = 200
+
     expiration_ms: int | None = None
 
     @staticmethod
@@ -68,7 +74,7 @@ class ModelClient:
         self._ch: AbstractChannel | None = None
         self._reply_q: AbstractQueue | None = None
 
-        self._pending: dict[str, asyncio.Future[EmbeddingVector]] = {}
+        self._pending: dict[str, asyncio.Future[Embedding]] = {}
         self._start_lock = asyncio.Lock()
         self._closed = False
 
@@ -133,22 +139,17 @@ class ModelClient:
                     fut.set_exception(RuntimeError(err))
                     return
 
-                dim = int(payload.get("dim", 0))
                 data = payload.get("embedding")
 
-                if (
-                    dim != EMBEDDING_DIM
-                    or not isinstance(data, list)
-                    or len(data) != EMBEDDING_DIM
-                ):
+                if not is_valid_vector(data):
                     fut.set_exception(ValueError("Invalid embedding payload"))
                     return
 
-                fut.set_result(EmbeddingVector(dim=EMBEDDING_DIM, data=data))
+                fut.set_result(Embedding(data=data).normalize())
             except Exception as e:
                 fut.set_exception(e)
 
-    async def get_embedding(self, article: Article) -> EmbeddingVector:
+    async def get_embedding(self, article: Article) -> Embedding:
         if self._closed:
             raise RuntimeError("ModelClient is closed")
 
@@ -167,9 +168,7 @@ class ModelClient:
         request_id = str(uuid.uuid4())
         corr_id = request_id
 
-        fut: asyncio.Future[EmbeddingVector] = (
-            asyncio.get_running_loop().create_future()
-        )
+        fut: asyncio.Future[Embedding] = asyncio.get_running_loop().create_future()
         self._pending[corr_id] = fut
 
         body = {
@@ -192,7 +191,7 @@ class ModelClient:
             reply_to=reply_q.name,
             content_type="application/json",
             delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
-            expiration=expiration_ms,
+            expiration=timedelta(milliseconds=expiration_ms),
         )
 
         try:

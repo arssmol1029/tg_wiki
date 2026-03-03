@@ -1,5 +1,5 @@
 [project]
-name = "pool-service"
+name = "rec-service"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
@@ -11,6 +11,7 @@ dependencies = [
   "pgvector>=0.3.5",
   "scpedia-protos @ file:../../libs/scpedia_protos",
   "aio_pika>=9.6",
+  "numpy>=2.0"
 ]
 
 [project.optional-dependencies]
@@ -28,4 +29,6 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [project.scripts]
-pool-service = "pool_service.main:run"
+rec-service = "rec_service.main:run"
+rec-refresh-worker = "rec_service.pool.refresh_worker:run"
+rec-gc-worker = "rec_service.pool.gc_worker:run"

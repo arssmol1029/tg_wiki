@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from pool_service.domain.embedding import EmbeddingVector
+from rec_service.domain.embedding import Embedding
 
 
 @dataclass(frozen=True)
@@ -11,9 +11,3 @@ class Article:
     lang: str
     thumbnail_url: str | None = None
     extract: str | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class EmbeddedArticle:
-    article: Article
-    embedding: EmbeddingVector

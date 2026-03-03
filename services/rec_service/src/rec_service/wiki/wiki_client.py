@@ -7,15 +7,19 @@ from typing import Optional
 
 from scpedia_protos.wiki.v1 import wiki_pb2, wiki_pb2_grpc
 
-from pool_service.domain.article import Article
-from pool_service.internal.article_grpc_mapper import from_wiki_pb_article
+from rec_service.domain.article import Article
+from rec_service.internal.article_grpc_mapper import from_wiki_pb_article
+from rec_service.database.postgres.postgres import PgUow
 
 
 @dataclass(frozen=True, slots=True)
 class WikiClientConfig:
     target: str
+
     default_timeout_s: float = 2.0
+
     max_retries: int = 2
+
     retry_base_delay_s: float = 0.2
 
     @staticmethod

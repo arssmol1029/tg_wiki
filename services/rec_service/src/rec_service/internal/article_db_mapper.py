@@ -1,6 +1,6 @@
-from pool_service.domain.article import Article
-from pool_service.domain.embedding import EmbeddingVector, EMBEDDING_DIM
-from pool_service.database.ports import ArticleRow, ArticleInsert
+from rec_service.domain.article import Article
+from rec_service.domain.embedding import Embedding
+from rec_service.database.ports import ArticleRow, ArticleInsert
 
 
 def from_article_row(row: ArticleRow) -> Article:
@@ -15,9 +15,9 @@ def from_article_row(row: ArticleRow) -> Article:
 
 
 def article_to_insert(
-    article: Article, *, embedding: EmbeddingVector | list[float]
+    article: Article, *, embedding: Embedding | list[float]
 ) -> ArticleInsert:
-    if isinstance(embedding, EmbeddingVector):
+    if isinstance(embedding, Embedding):
         embedding = embedding.data
 
     extract = article.extract or ""
@@ -25,6 +25,7 @@ def article_to_insert(
     return ArticleInsert(
         pageid=int(article.pageid),
         title=str(article.title),
+        lang=str(article.lang),
         url=str(article.url),
         thumbnail_url=str(article.thumbnail_url or ""),
         extract=str(extract),
