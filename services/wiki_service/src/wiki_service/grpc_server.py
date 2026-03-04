@@ -23,8 +23,8 @@ from wiki_service.internal.article_grpc_mapper import to_pb_article
 
 
 class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
-    def __init__(self, svc: WikiService) -> None:
-        self._svc = svc
+    def __init__(self, wiki_service: WikiService) -> None:
+        self._wiki_service = wiki_service
 
     async def GetRandomArticle(
         self, request: wiki_pb2.GetRandomArticleRequest, context
@@ -42,7 +42,7 @@ class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
             )
 
         try:
-            article = await self._svc.get_random_article(
+            article = await self._wiki_service.get_random_article(
                 min_length=request.min_length or 0,
                 lang=lang,
                 text=request.text,
@@ -78,7 +78,7 @@ class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
             )
 
         try:
-            article = await self._svc.get_article_by_title(
+            article = await self._wiki_service.get_article_by_title(
                 title,
                 lang=lang,
                 text=request.text,
@@ -113,7 +113,7 @@ class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
             )
 
         try:
-            article = await self._svc.get_article_by_pageid(
+            article = await self._wiki_service.get_article_by_pageid(
                 int(request.pageid),
                 lang=lang,
                 text=request.text,
@@ -153,7 +153,9 @@ class WikiGrpcServicer(wiki_pb2_grpc.WikiServiceServicer):
             )
 
         try:
-            items = await self._svc.search_articles(query, lang=lang, limit=limit)
+            items = await self._wiki_service.search_articles(
+                query, lang=lang, limit=limit
+            )
         except HttpRequestError as e:
             await context.abort(map_http_error(e), str(e))
         except HttpNotStartedError as e:
@@ -176,7 +178,7 @@ async def serve() -> None:
     http = AioHttpClient()
     await http.start()
 
-    svc = WikiService(http)
+    wiki_service = WikiService(http)
 
     server = grpc.aio.server(
         options=[
@@ -184,7 +186,9 @@ async def serve() -> None:
             ("grpc.max_receive_message_length", 10 * 1024 * 1024),
         ]
     )
-    wiki_pb2_grpc.add_WikiServiceServicer_to_server(WikiGrpcServicer(svc), server)
+    wiki_pb2_grpc.add_WikiServiceServicer_to_server(
+        WikiGrpcServicer(wiki_service), server
+    )
 
     server.add_insecure_port(f"{host}:{port}")
     await server.start()
