@@ -162,10 +162,6 @@ class PgUserRepo(UserRepo):
             "calibration_size": calibration_size,
         }
 
-        await self._s.execute(
-            sa.delete(user_seen_articles).where(user_seen_articles.c.user_id == user_id)
-        )
-
         stmt = (
             sa.update(User)
             .where(User.user_id == user_id)
