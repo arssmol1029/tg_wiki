@@ -298,7 +298,10 @@ class RefreshWorker:
                     return (article, emb)
                 except Exception:
                     log.warning(
-                        "Compute embedding failed for lang=%s", lang, exc_info=True
+                        "Compute embedding failed for pageid=%d, lang=%s",
+                        article.pageid,
+                        lang,
+                        exc_info=True,
                     )
                     return None
 
