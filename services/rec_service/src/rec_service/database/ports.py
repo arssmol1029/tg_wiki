@@ -49,7 +49,7 @@ class ArticleRow:
 
 class UserRepo(Protocol):
     async def create_user(
-        self, *, user_id: int, pref: list[float] | None, calibration_size: int
+        self, *, user_id: int, pref: list[float] | None = None, calibration_size: int
     ) -> bool:
         """
         Add a new user to the database.
