@@ -31,7 +31,7 @@ async def test_get_article_by_title(svc, monkeypatch, payload, expected):
         return payload
 
     monkeypatch.setattr(
-        "wiki_service.service.wiki_client.fetch_by_title", fake_fetch_by_title
+        "wiki_service.wiki.wiki_client.fetch_by_title", fake_fetch_by_title
     )
 
     article = await svc.get_article_by_title("T", lang="ru", text=True, image=False)
@@ -100,7 +100,7 @@ async def test_get_article_by_pageid(svc, monkeypatch, payload, expected):
         return payload
 
     monkeypatch.setattr(
-        "wiki_service.service.wiki_client.fetch_by_pageid", fake_fetch_by_pageid
+        "wiki_service.wiki.wiki_client.fetch_by_pageid", fake_fetch_by_pageid
     )
 
     article = await svc.get_article_by_pageid(123, lang="ru", text=True, image=False)
@@ -153,9 +153,7 @@ async def test_get_random_article(svc, monkeypatch, payload, expected):
     async def fake_fetch_random(http, lang="ru", text=True, image=True):
         return payload
 
-    monkeypatch.setattr(
-        "wiki_service.service.wiki_client.fetch_random", fake_fetch_random
-    )
+    monkeypatch.setattr("wiki_service.wiki.wiki_client.fetch_random", fake_fetch_random)
 
     article = await svc.get_random_article(
         min_length=15, lang="ru", text=True, image=False

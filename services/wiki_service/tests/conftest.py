@@ -1,6 +1,6 @@
 import pytest
 
-from wiki_service.service.wiki_service import WikiService
+from wiki_service.wiki.wiki_service import WikiService
 
 
 class DummyHttp:

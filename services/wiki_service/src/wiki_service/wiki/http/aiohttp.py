@@ -3,7 +3,7 @@ import aiohttp
 
 from typing import Any
 
-from wiki_service.service.http.http_client import HttpClientConfig, Json
+from wiki_service.wiki.http.http_client import HttpClientConfig, Json
 from wiki_service.internal.errors import HttpNotStartedError, HttpRequestError
 
 

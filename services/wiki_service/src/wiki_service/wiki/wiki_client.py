@@ -1,4 +1,4 @@
-from wiki_service.service.http.http_client import HttpClient, Json
+from wiki_service.wiki.http.http_client import HttpClient, Json
 from wiki_service.internal.langs import map_api_lang
 
 

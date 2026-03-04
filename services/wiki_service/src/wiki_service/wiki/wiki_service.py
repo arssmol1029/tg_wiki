@@ -1,9 +1,9 @@
 from typing import Optional
 from dataclasses import dataclass
 
-from wiki_service.service.http.http_client import HttpClient, Json
+from wiki_service.wiki.http.http_client import HttpClient, Json
 from wiki_service.domain.article import Article
-import wiki_service.service.wiki_client as wiki
+import wiki_service.wiki.wiki_client as wiki
 
 
 def _to_article(raw: dict, lang: str = "ru") -> Article:

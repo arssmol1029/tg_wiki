@@ -5,9 +5,9 @@ import grpc
 
 from scpedia_protos.wiki.v1 import wiki_pb2, wiki_pb2_grpc
 
-from wiki_service.service.http.http_client import HttpClientConfig
-from wiki_service.service.http.aiohttp import AioHttpClient
-from wiki_service.service.wiki_service import WikiService
+from wiki_service.wiki.http.http_client import HttpClientConfig
+from wiki_service.wiki.http.aiohttp import AioHttpClient
+from wiki_service.wiki.wiki_service import WikiService
 from wiki_service.internal.langs import (
     normalize_lang,
     supported_langs_list,

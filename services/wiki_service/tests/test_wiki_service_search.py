@@ -89,13 +89,13 @@ async def test_search_articles(
         return pages_payload
 
     monkeypatch.setattr(
-        "wiki_service.service.wiki_client.search_by_title", fake_search_by_title
+        "wiki_service.wiki.wiki_client.search_by_title", fake_search_by_title
     )
     monkeypatch.setattr(
-        "wiki_service.service.wiki_client.search_by_text", fake_search_by_text
+        "wiki_service.wiki.wiki_client.search_by_text", fake_search_by_text
     )
     monkeypatch.setattr(
-        "wiki_service.service.wiki_client.fetch_by_title", fake_fetch_by_title
+        "wiki_service.wiki.wiki_client.fetch_by_title", fake_fetch_by_title
     )
 
     res = await svc.search_articles("q", lang="ru", limit=limit)
