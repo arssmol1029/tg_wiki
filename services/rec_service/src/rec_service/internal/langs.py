@@ -71,10 +71,9 @@ _INITIALIZED: bool = False
 
 
 def init_langs(*, csv_path: str | Path) -> None:
+    global _SUPPORTED_LANGS, _INITIALIZED
     if _INITIALIZED:
         return
-
-    global _SUPPORTED_LANGS, _POOL_SIZES, _EXTRA_SIZES, _INITIALIZED
     read_langs_csv(csv_path, _POOL_SIZES, _EXTRA_SIZES)
 
     _SUPPORTED_LANGS = sorted(_POOL_SIZES.keys())
