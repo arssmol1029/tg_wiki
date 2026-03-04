@@ -1,18 +1,11 @@
 import asyncio
-import json
-import uuid
 import os
-
+import uuid
 from dataclasses import dataclass
-from datetime import timedelta
 
 import aio_pika
-from aio_pika.abc import (
-    AbstractRobustConnection,
-    AbstractChannel,
-    AbstractIncomingMessage,
-    AbstractQueue,
-)
+from aio_pika.abc import AbstractRobustConnection, AbstractChannel
+from aio_pika.patterns import RPC, JsonRPC
 
 from rec_service.domain.article import Article
 from rec_service.domain.embedding import Embedding
@@ -22,13 +15,9 @@ from rec_service.domain.vector import is_valid_vector
 @dataclass(frozen=True, slots=True)
 class ModelClientConfig:
     amqp_url: str
-
     requests_queue: str = "model.embed.requests"
-
     timeout_s: float = 30.0
-
     prefetch: int = 200
-
     expiration_ms: int | None = None
 
     @staticmethod
@@ -72,9 +61,8 @@ class ModelClient:
 
         self._conn: AbstractRobustConnection | None = None
         self._ch: AbstractChannel | None = None
-        self._reply_q: AbstractQueue | None = None
+        self._rpc: RPC | None = None
 
-        self._pending: dict[str, asyncio.Future[Embedding]] = {}
         self._start_lock = asyncio.Lock()
         self._closed = False
 
@@ -97,57 +85,20 @@ class ModelClient:
 
             await ch.declare_queue(self._cfg.requests_queue, durable=True)
 
-            reply_q: AbstractQueue = await ch.declare_queue(
-                exclusive=True, auto_delete=True
-            )
-            await reply_q.consume(self._on_reply, no_ack=False)
+            rpc = await JsonRPC.create(ch)
 
             self._conn = conn
             self._ch = ch
-            self._reply_q = reply_q
+            self._rpc = rpc
 
     async def close(self) -> None:
         self._closed = True
-
-        for fut in list(self._pending.values()):
-            if not fut.done():
-                fut.set_exception(asyncio.CancelledError("ModelClient closed"))
-        self._pending.clear()
-
         if self._conn is not None:
             await self._conn.close()
 
         self._conn = None
         self._ch = None
-        self._reply_q = None
-
-    async def _on_reply(self, message: AbstractIncomingMessage) -> None:
-        async with message.process(requeue=False):
-            corr_id = message.correlation_id
-            if not corr_id:
-                return
-
-            fut = self._pending.pop(corr_id, None)
-            if fut is None or fut.done():
-                return
-
-            try:
-                payload = json.loads(message.body.decode("utf-8"))
-
-                err = payload.get("error")
-                if err:
-                    fut.set_exception(RuntimeError(err))
-                    return
-
-                data = payload.get("embedding")
-
-                if not is_valid_vector(data):
-                    fut.set_exception(ValueError("Invalid embedding payload"))
-                    return
-
-                fut.set_result(Embedding(data=data).normalize())
-            except Exception as e:
-                fut.set_exception(e)
+        self._rpc = None
 
     async def get_embedding(self, article: Article) -> Embedding:
         if self._closed:
@@ -156,9 +107,8 @@ class ModelClient:
         if self._conn is None:
             await self.start()
 
-        ch = self._ch
-        reply_q = self._reply_q
-        if ch is None or reply_q is None:
+        rpc = self._rpc
+        if rpc is None:
             raise RuntimeError("ModelClient not started")
 
         text = article.extract
@@ -166,11 +116,6 @@ class ModelClient:
             raise ValueError("Article.extract is empty")
 
         request_id = str(uuid.uuid4())
-        corr_id = request_id
-
-        fut: asyncio.Future[Embedding] = asyncio.get_running_loop().create_future()
-        self._pending[corr_id] = fut
-
         body = {
             "request_id": request_id,
             "text": text,
@@ -185,18 +130,29 @@ class ModelClient:
         if expiration_ms is None:
             expiration_ms = int((self._cfg.timeout_s + 5.0) * 1000)
 
-        msg = aio_pika.Message(
-            body=json.dumps(body, ensure_ascii=False).encode("utf-8"),
-            correlation_id=corr_id,
-            reply_to=reply_q.name,
-            content_type="application/json",
-            delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
-            expiration=timedelta(milliseconds=expiration_ms),
-        )
-
         try:
-            await ch.default_exchange.publish(msg, routing_key=self._cfg.requests_queue)
-            return await asyncio.wait_for(fut, timeout=self._cfg.timeout_s)
+            result = await asyncio.wait_for(
+                rpc.call(
+                    self._cfg.requests_queue,
+                    kwargs=body,
+                    expiration=expiration_ms,
+                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+                ),
+                timeout=self._cfg.timeout_s,
+            )
         except Exception:
-            self._pending.pop(corr_id, None)
             raise
+
+        if isinstance(result, dict):
+            err = result.get("error")
+            if err:
+                raise RuntimeError(str(err))
+
+            data = result.get("embedding")
+        else:
+            data = None
+
+        if not is_valid_vector(data):
+            raise ValueError("Invalid embedding payload")
+
+        return Embedding(data=data).normalize()
