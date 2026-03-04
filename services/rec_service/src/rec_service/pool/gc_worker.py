@@ -1,6 +1,7 @@
 import asyncio
 import os
 import signal
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Callable
@@ -10,6 +11,10 @@ from rec_service.database.ports import Uow
 from rec_service.database.session import create_sessionmaker, create_engine
 from rec_service.database.postgres.postgres import make_uow_factory
 from rec_service.internal.langs import init_langs, extra_size_per_lang
+from rec_service.internal.logging import setup_logging, get_logger
+
+
+log = get_logger(__name__, component="gc-worker")
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,7 +116,9 @@ class GCWorker:
         deadline = now - timedelta(seconds=max(self._cfg.quarantine_max_age_s, 0.0))
 
         async with self._uow_factory() as uow:
-            await uow.quarantine.release_by_time(deadline=deadline)
+            released_count = await uow.quarantine.release_by_time(deadline=deadline)
+
+        log.info("Released %d articles from quarantine", released_count)
 
         self._last_quarantine_cleanup = now
 
@@ -121,23 +128,28 @@ class GCWorker:
         """
         now = datetime.now(timezone.utc)
 
-        async with self._uow_factory() as uow:
-            for lang, max_inactive in self._langs_map.items():
-                if max_inactive < 0:
-                    continue
+        for lang, max_inactive in self._langs_map.items():
+            if max_inactive < 0:
+                continue
 
+            async with self._uow_factory() as uow:
                 inactive = await uow.pool.get_inactive_articles_count(lang=lang)
                 extra = int(inactive) - int(max_inactive)
                 if extra <= 0:
                     continue
 
-                await uow.pool.delete_articles_by_time(lang=lang, count=extra)
+                deleated_count = await uow.pool.delete_articles_by_time(
+                    lang=lang, count=extra
+                )
+
+            log.info("Deleated %d inactive articles for lang=%s", deleated_count, lang)
 
         self._last_inactive_cleanup = now
 
 
 async def _main() -> None:
     init_langs(csv_path=os.getenv("PATH_TO_LANGS", "langs.csv"))
+    setup_logging()
 
     gc_worker_cfg = GCWorkerConfig.from_env()
 
@@ -148,6 +160,7 @@ async def _main() -> None:
     gc_worker = GCWorker(
         uow_factory=uow_factory, langs_map=extra_size_per_lang(), cfg=gc_worker_cfg
     )
+    log.info("Starting gc worker...")
     await gc_worker.run()
 
 

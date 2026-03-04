@@ -17,8 +17,11 @@ from rec_service.internal.langs import (
     is_supported_lang,
 )
 from rec_service.domain.vector import is_valid_vector
-from rec_service.domain.embedding import Embedding
 from rec_service.internal.article_grpc_mapper import to_rec_pb_article
+from rec_service.internal.logging import setup_logging, get_logger
+
+
+log = get_logger(__name__, component="grpc")
 
 
 class RecGrpcServicer(rec_pb2_grpc.RecServiceServicer):
@@ -32,23 +35,51 @@ class RecGrpcServicer(rec_pb2_grpc.RecServiceServicer):
     async def GetArticle(self, request: rec_pb2.GetArticleRequest, context):
         user_id = request.userid
 
-        if request.min_length < 0:
-            await context.abort(
-                grpc.StatusCode.INVALID_ARGUMENT, "min_length must be >= 0"
-            )
-        min_length = request.min_length or 0
-
-        count = min(max(1, request.count), self._max_count)
-
         lang = normalize_lang(request.lang)
         if not is_supported_lang(lang):
+            log.warning(
+                "Language is not supported",
+                extra={
+                    "method": "GetArticle",
+                    "user_id": user_id,
+                    "lang": lang,
+                    "status": "INVALID_ARGUMENT_ERROR",
+                },
+            )
             await context.abort(
                 grpc.StatusCode.INVALID_ARGUMENT,
                 f"language is not supported, try {', '.join(supported_langs_list())}",
             )
 
+        min_length = request.min_length or 0
+        if min_length < 0:
+            log.warning(
+                "min_length must be >= 0",
+                extra={
+                    "method": "GetArticle",
+                    "user_id": user_id,
+                    "lang": lang,
+                    "min_length": min_length,
+                    "status": "INVALID_ARGUMENT_ERROR",
+                },
+            )
+            await context.abort(
+                grpc.StatusCode.INVALID_ARGUMENT, "min_length must be >= 0"
+            )
+
+        count = min(max(1, request.count), self._max_count)
+
         pref = await self._rec_service.get_user_pref(user_id=user_id)
         if not pref or not is_valid_vector(pref):
+            log.error(
+                "Cant load user preference",
+                extra={
+                    "method": "GetArticle",
+                    "user_id": user_id,
+                    "lang": lang,
+                    "status": "INTERNAL_ERROR",
+                },
+            )
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 f"cant load user preference",
@@ -60,6 +91,19 @@ class RecGrpcServicer(rec_pb2_grpc.RecServiceServicer):
         )
         text = request.text
         image = request.image
+
+        log.info(
+            "Recieved %d, get %d articles",
+            count,
+            len(articles),
+            extra={
+                "method": "GetArticle",
+                "user_id": user_id,
+                "lang": lang,
+                "status": "OK",
+            },
+        )
+
         return rec_pb2.GetArticleResponse(
             articles=[
                 to_rec_pb_article(article=article, text=text, image=image)
@@ -74,6 +118,15 @@ class RecGrpcServicer(rec_pb2_grpc.RecServiceServicer):
 
         lang = normalize_lang(request.lang)
         if not is_supported_lang(lang):
+            log.warning(
+                "Language is not supported",
+                extra={
+                    "method": "UpdatePreference",
+                    "user_id": user_id,
+                    "lang": lang,
+                    "status": "INVALID_ARGUMENT_ERROR",
+                },
+            )
             await context.abort(
                 grpc.StatusCode.INVALID_ARGUMENT,
                 f"language is not supported, try {', '.join(supported_langs_list())}",
@@ -81,6 +134,15 @@ class RecGrpcServicer(rec_pb2_grpc.RecServiceServicer):
 
         pref = await self._rec_service.get_user_pref(user_id=user_id)
         if not pref or not is_valid_vector(pref):
+            log.error(
+                "Cant load user preference",
+                extra={
+                    "method": "UpdatePreference",
+                    "user_id": user_id,
+                    "lang": lang,
+                    "status": "INTERNAL_ERROR",
+                },
+            )
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 f"cant load user preference",
@@ -91,6 +153,15 @@ class RecGrpcServicer(rec_pb2_grpc.RecServiceServicer):
             lang=lang, pageid=pageid
         )
         if not embedding or not is_valid_vector(embedding):
+            log.error(
+                "Cant load article embedding",
+                extra={
+                    "method": "UpdatePreference",
+                    "user_id": user_id,
+                    "lang": lang,
+                    "status": "INTERNAL_ERROR",
+                },
+            )
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 f"cant load article embedding",
@@ -101,6 +172,15 @@ class RecGrpcServicer(rec_pb2_grpc.RecServiceServicer):
             user_id=user_id
         )
         if calibration_size is None:
+            log.error(
+                "Cant load user calibration_size",
+                extra={
+                    "method": "UpdatePreference",
+                    "user_id": user_id,
+                    "lang": lang,
+                    "status": "INTERNAL_ERROR",
+                },
+            )
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 f"cant load user",
@@ -109,6 +189,15 @@ class RecGrpcServicer(rec_pb2_grpc.RecServiceServicer):
 
         total_seen = await self._rec_service.get_user_total_seen(user_id=user_id)
         if total_seen is None:
+            log.error(
+                "Cant load user total_seen",
+                extra={
+                    "method": "UpdatePreference",
+                    "user_id": user_id,
+                    "lang": lang,
+                    "status": "INTERNAL_ERROR",
+                },
+            )
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 f"cant load user",
@@ -124,25 +213,62 @@ class RecGrpcServicer(rec_pb2_grpc.RecServiceServicer):
 
         success = await self._rec_service.update_user_pref(user_id=user_id, pref=pref)
         if not success:
+            log.error(
+                "Cant store user preference",
+                extra={
+                    "method": "UpdatePreference",
+                    "user_id": user_id,
+                    "lang": lang,
+                    "status": "INTERNAL_ERROR",
+                },
+            )
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 f"cant store user preference",
             )
             return
 
+        log.info(
+            "Updated user preference",
+            extra={
+                "method": "UpdatePreference",
+                "user_id": user_id,
+                "lang": lang,
+                "status": "OK",
+            },
+        )
+
         return rec_pb2.UpdatePreferenceResponse(success=success)
 
     async def CreateUser(self, request: rec_pb2.UpsertUserRequest, context):
         user_id = request.userid
 
-        if request.calibration_size < 0:
+        calibration_size = request.calibration_size
+        if calibration_size is not None and calibration_size < 0:
+            log.warning(
+                "calibration_size must be >= 0",
+                extra={
+                    "method": "CreateUser",
+                    "user_id": user_id,
+                    "calibration_size": calibration_size,
+                    "status": "INVALID_ARGUMENT_ERROR",
+                },
+            )
             await context.abort(
                 grpc.StatusCode.INVALID_ARGUMENT, "calibration_size must be >= 0"
             )
-        calibration_size = request.calibration_size
 
         success = await self._rec_service.create_user(
             user_id=user_id, calibration_size=calibration_size
+        )
+
+        log.info(
+            "Created user",
+            extra={
+                "method": "CreateUser",
+                "user_id": user_id,
+                "status": "OK",
+            },
         )
 
         return rec_pb2.CreateUserResponse(success=success)
@@ -150,14 +276,32 @@ class RecGrpcServicer(rec_pb2_grpc.RecServiceServicer):
     async def ResetUser(self, request: rec_pb2.UpsertUserRequest, context):
         user_id = request.userid
 
-        if request.calibration_size < 0:
+        calibration_size = request.calibration_size
+        if calibration_size is not None and calibration_size < 0:
+            log.warning(
+                "calibration_size must be >= 0",
+                extra={
+                    "method": "ResetUser",
+                    "user_id": user_id,
+                    "calibration_size": calibration_size,
+                    "status": "INVALID_ARGUMENT_ERROR",
+                },
+            )
             await context.abort(
                 grpc.StatusCode.INVALID_ARGUMENT, "calibration_size must be >= 0"
             )
-        calibration_size = request.calibration_size
 
         success = await self._rec_service.reset_user(
             user_id=user_id, calibration_size=calibration_size
+        )
+
+        log.info(
+            "Reset user preference",
+            extra={
+                "method": "ResetUser",
+                "user_id": user_id,
+                "status": "OK",
+            },
         )
 
         return rec_pb2.ResetUserResponse(success=success)
@@ -168,6 +312,7 @@ async def serve() -> None:
     port = int(os.getenv("REC_GRPC_PORT", "50051"))
 
     init_langs(csv_path=os.getenv("PATH_TO_LANGS", "langs.csv"))
+    setup_logging()
 
     db_config = DBConfig.from_env()
     engine = create_engine(db_config)
@@ -189,6 +334,7 @@ async def serve() -> None:
     )
 
     server.add_insecure_port(f"{host}:{port}")
+    log.info("Starting gRPC server...")
     await server.start()
 
     stop_evt = asyncio.Event()

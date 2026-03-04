@@ -17,6 +17,10 @@ from rec_service.internal.article_db_mapper import article_to_insert
 from rec_service.internal.langs import init_langs, pool_size_per_lang
 from rec_service.model.model_client import ModelClient, ModelClientConfig
 from rec_service.wiki.wiki_client import WikiClient, WikiClientConfig
+from rec_service.internal.logging import setup_logging, get_logger
+
+
+log = get_logger(__name__, component="refresh-worker")
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,7 +130,7 @@ class RefreshWorker:
             except asyncio.CancelledError:
                 raise
             except Exception:
-                # logging
+                log.exception("Tick failed for lang=%s", lang)
                 did_work = False
 
             if not did_work:
@@ -162,6 +166,7 @@ class RefreshWorker:
             await self._deactivate_and_refill(
                 lang=lang, pageids_to_replace=pageids_to_replace
             )
+
             return True
 
     async def _deactivate_and_refill(
@@ -178,6 +183,7 @@ class RefreshWorker:
             await uow.pool.set_articles_active(
                 lang=lang, pageids=pageids_to_replace[:inserted_count], is_active=False
             )
+        log.info("Replased %d articles", inserted_count)
 
     async def _fill_to_target(self, *, lang: str, deficit: int) -> int:
         """
@@ -235,6 +241,8 @@ class RefreshWorker:
                     await uow.quarantine.add_articles(
                         lang=lang, pageids=inserted_pageids
                     )
+
+        log.info("Inserted %d articles with %d attempts", inserted_count, attempts)
         return inserted_count
 
     async def _fetch_candidates(
@@ -251,10 +259,20 @@ class RefreshWorker:
                         timeout_s=self._cfg.wiki_timeout_s,
                     )
                 except Exception:
+                    log.warning(
+                        "Fetch wiki article failed for lang=%s", lang, exc_info=True
+                    )
                     return None
 
         tasks = [asyncio.create_task(one()) for _ in range(count)]
         res = await asyncio.gather(*tasks, return_exceptions=True)
+
+        log.info(
+            "Requested %d wiki pages, get %d (batch=%d)",
+            count,
+            len(res),
+            self._cfg.wiki_concurrency,
+        )
 
         out: list[Article] = []
         for r in res:
@@ -279,10 +297,21 @@ class RefreshWorker:
                     )
                     return (article, emb)
                 except Exception:
+                    log.warning(
+                        "Compute embedding failed for lang=%s", lang, exc_info=True
+                    )
                     return None
 
         tasks = [asyncio.create_task(one(a)) for a in articles]
         res = await asyncio.gather(*tasks, return_exceptions=False)
+
+        log.info(
+            "Computed %d embeddings, get %d (batch=%d)",
+            len(articles),
+            len(res),
+            self._cfg.wiki_concurrency,
+        )
+
         return [r for r in res if r is not None]
 
     async def _maybe_await_embedding(self, article: Article) -> Embedding:
@@ -294,6 +323,7 @@ class RefreshWorker:
 
 async def _main() -> None:
     init_langs(csv_path=os.getenv("PATH_TO_LANGS", "langs.csv"))
+    setup_logging()
 
     refresh_worker_cfg = RefreshWorkerConfig.from_env()
     wiki_client_cfg = WikiClientConfig.from_env()
@@ -304,9 +334,11 @@ async def _main() -> None:
 
     try:
         wiki = WikiClient(wiki_client_cfg)
+        log.info("Starting wiki client...")
         await wiki.start()
 
         model = ModelClient(model_client_cfg)
+        log.info("Starting model client...")
         await model.start()
 
         db_config = DBConfig.from_env()
@@ -320,6 +352,7 @@ async def _main() -> None:
             langs_map=pool_size_per_lang(),
             cfg=refresh_worker_cfg,
         )
+        log.info("Starting refresh worker...")
         await refresh_worker.run()
     finally:
         if wiki:
